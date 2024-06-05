@@ -1,0 +1,1 @@
+"C:\Program Files\Java\jdk1.8.0_172\bin\java.exe" -jar "D:\iknow\Documents\GitHub\liliths-throne-public\liliths-throne-public.jar"
