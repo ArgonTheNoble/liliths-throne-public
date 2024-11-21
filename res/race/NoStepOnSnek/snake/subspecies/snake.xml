@@ -96,13 +96,13 @@
 		<category masculineWeighting="0" feminineWeighting="0">ARCANE</category>
 	</perkWeightings>
 	<regionLocations>
-		<region rarity="ZERO_EXTREMELY_RARE">DOMINION</region>
+		<region rarity="THREE_UNCOMMON">DOMINION</region>
 		<region rarity="ZERO_EXTREMELY_RARE">FIELD_CITY</region>
 		<region rarity="ZERO_EXTREMELY_RARE">DESERT_CITY</region>
 		<region rarity="ZERO_EXTREMELY_RARE">JUNGLE_CITY</region>
 	</regionLocations>
 	<worldLocations>
-		<world rarity="ZERO_EXTREMELY_RARE">NIGHTLIFE_CLUB</world>
+		<world rarity="THREE_UNCOMMON">NIGHTLIFE_CLUB</world>
 	</worldLocations>
 	<flags/>
 </subspecies>

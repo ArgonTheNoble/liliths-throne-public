@@ -225,14 +225,17 @@
 		<region rarity="ZERO_EXTREMELY_RARE">VOLCANO</region>
 		<region rarity="ZERO_EXTREMELY_RARE">DESERT</region>
 		<region rarity="ZERO_EXTREMELY_RARE">MOUNTAINS</region>
+		<region rarity="ONE_VERY_RARE">DOMINION</region>
+		<region rarity="THREE_UNCOMMON">FIELD_CITY</region>
 	</regionLocations>
 	
 	<!-- The places in which this subspecies can spawn.
 	The text inside the 'world' element corresponds to a WorldType as found here: https://github.com/Innoxia/liliths-throne-public/blob/dev/src/com/lilithsthrone/world/WorldType.java 
 	The 'rarity' field corresponds to a SubspeciesSpawnRarity, values of which can be found here: https://github.com/Innoxia/liliths-throne-public/blob/dev/src/com/lilithsthrone/game/character/race/SubspeciesSpawnRarity.java
 	This can be left blank, but if no 'regionLocations' or 'worldLocations' are defined, then this subspecies will never spawn as a randomly-encountered subspecies. -->
-	<worldLocations/>
-	
+	<worldLocations>
+		<world rarity="ONE_VERY_RARE">NIGHTLIFE_CLUB</world>
+	</worldLocations>
 	<!-- Any special flags which should be applied to this subspecies.
 	Values can be found here: https://github.com/Innoxia/liliths-throne-public/blob/dev/src/com/lilithsthrone/game/character/race/SubspeciesFlag.java -->
 	<flags/>

@@ -364,7 +364,10 @@ public class Tail implements BodyPartInterface {
 		return lengthAsPercentageOfHeight;
 	}
 
-	/**
+	public String setLength(GameCharacter owner, float lengthAsPercentageOfHeight) {
+		return setLengthAsPercentageOfHeight(owner, lengthAsPercentageOfHeight);
+	}
+	/** 
 	 * Sets the tails' length as a percentage of the owner's height. Value is bound to >=0.05f && <=2.5f
 	 */
 	public String setLengthAsPercentageOfHeight(GameCharacter owner, float lengthAsPercentageOfHeight) {

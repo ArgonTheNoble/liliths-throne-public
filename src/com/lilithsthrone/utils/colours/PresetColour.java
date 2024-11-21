@@ -603,6 +603,7 @@ public class PresetColour {
 	public static Colour COVERING_LILAC = new Colour(false, BaseColour.LILAC, "lilac") {}.setLinkedColourLighter(COVERING_LILAC_LIGHT);
 	public static Colour COVERING_INDIGO = new Colour(false, BaseColour.INDIGO, "indigo") {}.setLinkedColourLighter(COVERING_LILAC);
 	public static Colour COVERING_PURPLE_LIGHT = new Colour(false, BaseColour.PURPLE_LIGHT, "light purple") {}.setLinkedColourLighter(COVERING_INDIGO);
+	public static Colour COVERING_VIOLET = new Colour(false, BaseColour.PURPLE_LIGHT, "violet") {}.setLinkedColourLighter(COVERING_INDIGO);
 	public static Colour COVERING_PURPLE = new Colour(false, BaseColour.PURPLE, "purple") {}.setLinkedColourLighter(COVERING_PURPLE_LIGHT);
 	public static Colour COVERING_PURPLE_DARK = new Colour(false, BaseColour.PURPLE_DARK, "dark purple") {}.setLinkedColourLighter(COVERING_PURPLE);
 	

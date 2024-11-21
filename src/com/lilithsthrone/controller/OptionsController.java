@@ -468,6 +468,7 @@ public class OptionsController {
 				new Util.Value<>("THUMBNAIL", PropertyValue.thumbnail),
 				new Util.Value<>("SHARED_ENCYCLOPEDIA", PropertyValue.sharedEncyclopedia),
 				new Util.Value<>("WEATHER_INTERRUPTION", PropertyValue.weatherInterruptions),
+				new Util.Value<>("ENCHANTMENT_INTERRUPTION", PropertyValue.enchantmentInterruptions),
 				new Util.Value<>("DIALOGUE_COPY", PropertyValue.automaticDialogueCopy),
 				new Util.Value<>("SILLY", PropertyValue.sillyMode)));
 	}
@@ -701,6 +702,22 @@ public class OptionsController {
 			}
 		}
 		
+		id = "PREGNANCY_BREAST_GROWTH_VARIANCE_ON";
+		if (MainController.document.getElementById(id) != null) {
+			((EventTarget) MainController.document.getElementById(id)).addEventListener("click", e->{
+				Main.getProperties().pregnancyBreastGrowthVariance = Math.min(10, Main.getProperties().pregnancyBreastGrowthVariance+1);
+				Main.saveProperties();
+				Main.game.setContent(new Response("", "", Main.game.getCurrentDialogueNode()));
+			}, false);
+		}
+		id = "PREGNANCY_BREAST_GROWTH_VARIANCE_OFF";
+		if (MainController.document.getElementById(id) != null) {
+			((EventTarget) MainController.document.getElementById(id)).addEventListener("click", e->{
+				Main.getProperties().pregnancyBreastGrowthVariance = Math.max(0, Main.getProperties().pregnancyBreastGrowthVariance-1);
+				Main.saveProperties();
+				Main.game.setContent(new Response("", "", Main.game.getCurrentDialogueNode()));
+			}, false);
+		}
 		id = "PREGNANCY_BREAST_GROWTH_ON";
 		if (MainController.document.getElementById(id) != null) {
 			((EventTarget) MainController.document.getElementById(id)).addEventListener("click", e->{

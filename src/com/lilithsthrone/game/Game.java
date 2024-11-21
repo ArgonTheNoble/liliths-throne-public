@@ -5718,6 +5718,10 @@ public class Game implements XMLSaving {
 	public boolean isWeatherInterruptionsEnabled() {
 		return Main.getProperties().hasValue(PropertyValue.weatherInterruptions);
 	}
+
+	public boolean isEnchantmentInterruptionsEnabled() {
+		return Main.getProperties().hasValue(PropertyValue.enchantmentInterruptions);
+	}
 	
 	public boolean isAutomaticDialogueCopy() {
 		return Main.getProperties().hasValue(PropertyValue.automaticDialogueCopy);

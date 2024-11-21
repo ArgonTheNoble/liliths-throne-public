@@ -2250,7 +2250,7 @@ public class ImpFortressDialogue {
 
 				if (index == 1) {
 					if(isAlphaFortress()) {
-						if(Main.game.getPlayer().hasPerkAnywhereInTree(Perk.MARTIAL_ARTIST)) {
+						if(Main.game.getPlayer().hasPerkAnywhereInTree(Perk.FEROCIOUS_WARRIOR)) {
 							return new Response(Util.capitaliseSentence(Perk.MARTIAL_ARTIST.getName(Main.game.getPlayer())),
 									UtilText.parse(getBoss(),
 											"Seize this fleeting opportunity to provoke [npc.name] into trying to punch you,"

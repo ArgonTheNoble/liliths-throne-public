@@ -2161,7 +2161,7 @@ public class OptionsDialogue {
 	
 	private static String getContentPreferenceVariableDiv(String id, Colour colour, String title, String description, String valueDisplay, int value, int minimum, int maximum) {
 		StringBuilder contentSB = new StringBuilder();
-
+ 
 		contentSB.append(
 				"<div class='container-full-width' style='padding:0; margin:2px 0;'>"
 					+ "<div class='container-half-width' style='width:calc(55% - 16px);'>"
@@ -2475,6 +2475,11 @@ public class OptionsDialogue {
 					"Storm interruptions",
 					"When enabled, arcane storms will interrupt dialogue to let you know that they've started.",
 					Main.getProperties().hasValue(PropertyValue.weatherInterruptions)));
+			UtilText.nodeContentSB.append(getContentPreferenceDiv("ENCHANTMENT_INTERRUPTION",
+					PresetColour.GENERIC_ARCANE,
+					"Enchantment interruptions",
+					"When enabled, clothing enchantment effects will interrupt dialogue to let you know that they've happened.",
+					Main.getProperties().hasValue(PropertyValue.enchantmentInterruptions)));
 			UtilText.nodeContentSB.append(getContentPreferenceDiv("DIALOGUE_COPY",
 					PresetColour.BASE_BLUE_STEEL,
 					"Automatic text copying",
@@ -2563,7 +2568,7 @@ public class OptionsDialogue {
 					PresetColour.BASE_PINK_DEEP,
 					"Pregnancy duration",
 					"This sets the maximum time it takes for a pregnancy to progress from conception to birth.",
-					Main.getProperties().pregnancyDuration+" week"+(Main.getProperties().pregnancyDuration == 1?"":"s"),
+					Main.getProperties().pregnancyDuration+" day"+(Main.getProperties().pregnancyDuration == 1?"":"s"),
 					Main.getProperties().pregnancyDuration,
 					1,
 					40));
@@ -2956,6 +2961,16 @@ public class OptionsDialogue {
 					"Toggles whether or not characters with very large lips will speak with a lisp.",
 					Main.getProperties().hasValue(PropertyValue.lipLispContent)));
 			
+			UtilText.nodeContentSB.append(getContentPreferenceVariableDiv(
+					"PREGNANCY_BREAST_GROWTH_VARIANCE",
+					PresetColour.BASE_PINK,
+					"Pregnancy Breast Growth Variance",
+					"Set the <b>variance</b> of cup size growth that characters will gain from each pregnancy.",
+					Main.getProperties().pregnancyBreastGrowthVariance == 0
+							?"[style.boldDisabled(Disabled)]"
+							:Main.getProperties().pregnancyBreastGrowthVariance+" cup"+(Main.getProperties().pregnancyBreastGrowthVariance != 1?"s":""),
+					Main.getProperties().pregnancyBreastGrowthVariance, 0, 10));
+
 			UtilText.nodeContentSB.append(getBreastsContentPreferenceVariableDiv(
 					"PREGNANCY_BREAST_GROWTH",
 					PresetColour.BASE_PINK,

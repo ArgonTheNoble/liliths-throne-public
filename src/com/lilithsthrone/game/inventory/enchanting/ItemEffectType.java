@@ -42,6 +42,7 @@ import com.lilithsthrone.game.character.effects.StatusEffect;
 import com.lilithsthrone.game.character.fetishes.AbstractFetish;
 import com.lilithsthrone.game.character.fetishes.Fetish;
 import com.lilithsthrone.game.character.fetishes.FetishDesire;
+import com.lilithsthrone.game.character.npc.NPC;
 import com.lilithsthrone.game.character.npc.misc.GenericAndrogynousNPC;
 import com.lilithsthrone.game.character.npc.misc.OffspringSeed;
 import com.lilithsthrone.game.character.persona.PersonalityTrait;
@@ -244,6 +245,13 @@ public class ItemEffectType {
 				if(primaryModifier==TFModifier.ORIENTATION_GYNEPHILIC) {
 					boolean alreadyGynephilic = target.getSexualOrientation()==SexualOrientation.GYNEPHILIC;
 					target.setSexualOrientation(SexualOrientation.GYNEPHILIC);
+					if(!target.isPlayer() && !target.isUnique()) {
+						try {
+							((NPC)target).generatePartnerPreferences();
+						} catch (Exception e) {
+							//??
+						}
+					}
 					return UtilText.parse(target,
 							"<p style='text-align:center;'>"
 									+ (alreadyGynephilic
@@ -254,6 +262,13 @@ public class ItemEffectType {
 				} else if(primaryModifier==TFModifier.ORIENTATION_AMBIPHILIC) {
 					boolean alreadyAmbiphilic = target.getSexualOrientation()==SexualOrientation.AMBIPHILIC;
 					target.setSexualOrientation(SexualOrientation.AMBIPHILIC);
+					if(!target.isPlayer() && !target.isUnique()) {
+						try {
+							((NPC)target).generatePartnerPreferences();
+						} catch (Exception e) {
+							//??
+						}
+					}
 					return UtilText.parse(target,
 							"<p style='text-align:center;'>"
 									+ (alreadyAmbiphilic
@@ -265,6 +280,13 @@ public class ItemEffectType {
 				} else if(primaryModifier==TFModifier.ORIENTATION_ANDROPHILIC) {
 					boolean alreadyAndrophilic = target.getSexualOrientation()==SexualOrientation.ANDROPHILIC;
 					target.setSexualOrientation(SexualOrientation.ANDROPHILIC);
+					if(!target.isPlayer() && !target.isUnique()) {
+						try {
+							((NPC)target).generatePartnerPreferences();
+						} catch (Exception e) {
+							//??
+						}
+					}
 					return UtilText.parse(target,
 							"<p style='text-align:center;'>"
 									+ (alreadyAndrophilic

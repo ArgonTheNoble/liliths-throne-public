@@ -181,6 +181,10 @@ public class Tongue implements BodyPartInterface {
 		return tongueModifiers.contains(modifier);
 	}
 
+	public Set<TongueModifier> getTongueModifiers() {
+		return tongueModifiers;
+	}
+
 	public String addTongueModifier(GameCharacter owner, TongueModifier modifier) {
 		if(hasTongueModifier(modifier)) {
 			return owner==null ? "" : "<p style='text-align:center;'>[style.colourDisabled(Nothing happens...)]</p>";

@@ -698,6 +698,13 @@ public enum TFModifier {
 			PresetColour.BASE_YELLOW,
 			Rarity.LEGENDARY),
 	
+	TF_MOD_FERAL("feral body",
+			"Applies an effect to give the user a feral body.",
+			"feral body",
+			"modifier_circle_tf_legConfig_taur",
+			PresetColour.BASE_BLACK,
+			Rarity.LEGENDARY),
+	
 	TF_MOD_INTERNAL("internal",
 			"Applies an effect related to making a body part internal.",
 			"internal",
@@ -1572,6 +1579,7 @@ public enum TFModifier {
 		TFBehaviouralFetishList.add(TF_MOD_FETISH_KINK_RECEIVING);
 		TFBehaviouralFetishList.add(TF_MOD_FETISH_SIZE_QUEEN);
 
+		clothingPrimaryList.add(TFModifier.NONE);
 		clothingPrimaryList.add(TFModifier.CLOTHING_MAJOR_ATTRIBUTE);
 		clothingPrimaryList.add(TFModifier.CLOTHING_ATTRIBUTE);
 		clothingPrimaryList.add(TFModifier.CLOTHING_SPECIAL);

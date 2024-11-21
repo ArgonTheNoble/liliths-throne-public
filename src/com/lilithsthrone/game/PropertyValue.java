@@ -25,6 +25,7 @@ public enum PropertyValue {
 	tattooRemovalConfirmations(true),
 	sillyMode(false),
 	weatherInterruptions(true),
+	enchantmentInterruptions(true),
 	automaticDialogueCopy(false),
 
 	autoLocale(true),

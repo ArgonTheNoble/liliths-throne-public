@@ -1952,6 +1952,33 @@ public class Fetish {
 		@Override
 		public boolean isContentEnabled() { return Main.game.isPenetrationLimitationsEnabled(); }
 	};
+
+	public static AbstractFetish FETISH_FURRY = new AbstractFetish(60,
+			"furry",
+			"non-human parts",
+			"fetish_transformation_receiving",
+			FetishExperience.BASE_EXPERIENCE_GAIN,
+			Util.newArrayListOfValues(PresetColour.BASE_BLACK, PresetColour.BASE_PINK),
+			null,
+			Util.newArrayListOfValues("[style.colourGood(Enjoys)] non-human transformations"),
+			null) {
+
+		@Override
+		public String getDescription(GameCharacter owner) {
+			if(owner==null) {
+				return "This fetish relates to a person's desire for gaining non-human parts.";
+				
+			} else {
+				return UtilText.parse(owner, "[npc.Name] [npc.verb(love)] to gain non-human transformations.");
+			}
+		}
+
+		@Override
+		public String getFetishDesireDescription(GameCharacter target, FetishDesire desire) {
+			return getGenericFetishDesireDescription(target, desire, "furry transformations");
+		}
+
+	};
 	
 	// Derived fetishes:
 	

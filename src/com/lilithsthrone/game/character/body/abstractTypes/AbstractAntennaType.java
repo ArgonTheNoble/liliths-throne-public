@@ -13,9 +13,11 @@ import com.lilithsthrone.game.character.body.Body;
 import com.lilithsthrone.game.character.body.coverings.AbstractBodyCoveringType;
 import com.lilithsthrone.game.character.body.coverings.BodyCoveringType;
 import com.lilithsthrone.game.character.body.types.BodyPartTypeInterface;
+import com.lilithsthrone.game.character.body.types.AntennaType;
 import com.lilithsthrone.game.character.race.AbstractRace;
 import com.lilithsthrone.game.character.race.Race;
 import com.lilithsthrone.game.dialogue.utils.UtilText;
+import com.lilithsthrone.game.inventory.enchanting.TFModifier;
 import com.lilithsthrone.utils.Util;
 
 /**
@@ -208,6 +210,10 @@ public abstract class AbstractAntennaType implements BodyPartTypeInterface {
 	@Override
 	public AbstractRace getRace() {
 		return race;
+	}
+
+	public TFModifier getTFModifier() {
+		return getTFTypeModifier(AntennaType.getAntennaTypes(race));
 	}
 
 //	@Override

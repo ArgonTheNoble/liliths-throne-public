@@ -11,7 +11,11 @@ import com.lilithsthrone.game.PropertyValue;
 import com.lilithsthrone.game.character.GameCharacter;
 import com.lilithsthrone.game.character.PlayerCharacter;
 import com.lilithsthrone.game.character.attributes.Attribute;
+import com.lilithsthrone.game.character.body.Breast;
+import com.lilithsthrone.game.character.body.BreastCrotch;
 import com.lilithsthrone.game.character.body.CoverableArea;
+import com.lilithsthrone.game.character.body.Tail;
+import com.lilithsthrone.game.character.body.Testicle;
 import com.lilithsthrone.game.character.body.abstractTypes.AbstractAntennaType;
 import com.lilithsthrone.game.character.body.abstractTypes.AbstractHornType;
 import com.lilithsthrone.game.character.body.abstractTypes.AbstractTailType;
@@ -70,6 +74,7 @@ import com.lilithsthrone.game.character.body.valueEnums.TesticleSize;
 import com.lilithsthrone.game.character.body.valueEnums.TongueLength;
 import com.lilithsthrone.game.character.body.valueEnums.TongueModifier;
 import com.lilithsthrone.game.character.body.valueEnums.Wetness;
+import com.lilithsthrone.game.character.body.valueEnums.WingSize;
 import com.lilithsthrone.game.character.effects.AbstractPerk;
 import com.lilithsthrone.game.character.effects.AbstractStatusEffect;
 import com.lilithsthrone.game.character.effects.EffectBenefit;
@@ -310,6 +315,7 @@ public abstract class AbstractItemEffectType {
 						);
 			case TF_CORE:
 				return Util.newArrayListOfValues(
+						TFModifier.TF_TYPE_1,
 						TFModifier.TF_MOD_SIZE,// height
 						TFModifier.TF_MOD_SIZE_SECONDARY,// muscle mass
 						TFModifier.TF_MOD_SIZE_TERTIARY,// body size
@@ -417,6 +423,10 @@ public abstract class AbstractItemEffectType {
 					mods.add(TFModifier.TF_MOD_ORIFICE_TENTACLED_2);
 				}
 				return mods;
+			case NONE:
+				return Util.newArrayListOfValues(
+					TFModifier.NONE
+					);
 			default:
 				break;
 		}
@@ -727,8 +737,44 @@ public abstract class AbstractItemEffectType {
 						break;
 				}
 				break;
+			case NONE:
+				switch(secondaryModifier) {
+					case NONE:
+						switch(potency) {
+							case MINOR_BOOST:
+								descriptions.add("Random weekly non-racial transformation.");
+								break;
+							case BOOST:
+								descriptions.add("Random daily non-racial transformation.");
+								break;
+							case MAJOR_BOOST:
+								descriptions.add("Random hourly non-racial transformation.");
+								break;
+							default:
+								break;
+						}
+						break;
+					default:
+						break;
+				}
+				break;
 			case TF_CORE:
 				switch(secondaryModifier) {
+					case TF_TYPE_1:
+						switch(potency) {
+							case MINOR_BOOST:
+								descriptions.add("Random weekly racial transformation.");
+								break;
+							case BOOST:
+								descriptions.add("Random daily racial transformation.");
+								break;
+							case MAJOR_BOOST:
+								descriptions.add("Random hourly racial transformation.");
+								break;
+							default:
+								break;
+						}
+						break;
 					case TF_MOD_SIZE:
 						descriptions.add(getClothingTFChangeDescriptionEntry(potency, "height", Units.size(Height.ZERO_TINY.getMinimumValue() + limit, Units.ValueType.PRECISE, Units.UnitType.SHORT)));
 						break;
@@ -1422,8 +1468,21 @@ public abstract class AbstractItemEffectType {
 						}
 					}
 					break;
+				case NONE:
+					if(target.getSubspeciesOverride()!=null) {
+						sb.append(getRacialEffect(target.getSubspeciesOverrideRace(), TFModifier.NONE, TFModifier.NONE, potency, user, target).applyEffect());
+					} else {
+						sb.append(getRacialEffect(target.getRace(), TFModifier.NONE, TFModifier.NONE, potency, user, target).applyEffect());
+					}
 				case TF_CORE:
 					switch(secondaryModifier) {
+						case TF_TYPE_1:
+							if(target.getSubspeciesOverride()!=null) {
+								sb.append(getRacialEffect(target.getSubspeciesOverrideRace(), primaryModifier, secondaryModifier, potency, user, target).applyEffect());
+							} else {
+								sb.append(getRacialEffect(target.getRace(), primaryModifier, secondaryModifier, potency, user, target).applyEffect());
+							}
+							break;
 						case TF_MOD_SIZE:
 							if(isWithinLimits(heightIncrement, target.getHeightValue()-Height.ZERO_TINY.getMinimumValue(), limit)) {
 								sb.append(target.incrementHeight(heightIncrement, false));
@@ -2005,6 +2064,9 @@ public abstract class AbstractItemEffectType {
 			}
 		}
 		
+		if(!Main.game.isEnchantmentInterruptionsEnabled()) {
+			return "";
+		}
 		return sb.toString();
 	}
 	
@@ -3611,6 +3673,34 @@ public abstract class AbstractItemEffectType {
 									@Override public String applyEffect() { return target.setGenitalArrangement(GenitalArrangement.CLOACA); }
 								};
 						}
+					
+					case TF_MOD_FERAL:
+						switch(potency) {
+							case MINOR_DRAIN:
+								return new RacialEffectUtil("Makes the body anthropomorphic.") {
+									@Override public String applyEffect() { 
+										if(target.isFeral()) {
+											target.setFeral(null);
+											return "[npc.name] is no longer feral!";
+										} else {
+											return "[style.italicsDisabled[npc.name] is already non-feral...)]";
+										}
+									}
+								};
+							case MINOR_BOOST:
+							default:
+								return new RacialEffectUtil("Makes the body feral.") {
+									@Override public String applyEffect() { 
+										if(!target.isFeral() && target.isFeralConfigurationAvailable()) {
+											target.setFeral(target.getSubspecies());
+											return "[npc.name] is now feral!";
+										} else {
+											return "[style.italicsDisabled[npc.name] could not be made feral...)]";
+										}
+									}
+								};
+						}
+						
 						
 					default:
 						return new RacialEffectUtil("Random "+race.getName(false)+" transformation") {
@@ -5765,6 +5855,7 @@ public abstract class AbstractItemEffectType {
 		return new RacialEffectUtil("Random non-racial transformation") {
 			@Override
 			public String applyEffect() {
+				/*
 				TFModifier mod = TFModifier.NONE, modSecondary = TFModifier.NONE;
 
 				while (mod == TFModifier.NONE || modSecondary == TFModifier.NONE) {
@@ -5775,8 +5866,354 @@ public abstract class AbstractItemEffectType {
 				TFPotency pot = getRacialPotencyModifiers(race, mod, modSecondary).get(Util.random.nextInt(getRacialPotencyModifiers(race, mod, modSecondary).size()));
 
 				return getRacialEffect(race, mod, modSecondary, pot, user, target).applyEffect();
+				*/
+				return RandomNonRacialTF(race, user, target).applyEffect();
 			}
 		};
+	}
+
+	protected static RacialEffectUtil RandomNonRacialTF(AbstractRace race, GameCharacter user, GameCharacter target) {
+		return RandomNonRacialTF(race, user, target, false, false);
+	}
+
+	protected static RacialEffectUtil RandomNonRacialTF(AbstractRace race, GameCharacter user, GameCharacter target, boolean forceMidEffects, boolean forceMinorEffects) {
+		List<RacialEffectUtil> possibleEffects = new ArrayList<>();
+		boolean midEffects = forceMidEffects || (Util.random.nextFloat() < 0.5f ? true : false); 
+		boolean minorEffects = forceMinorEffects || (Util.random.nextFloat() < 0.2f ? true : false); 
+
+		//Face
+		if(target.getLipSize() != LipSize.SEVEN_ABSURD)
+			possibleEffects.add(getRacialEffect(race, TFModifier.TF_FACE, TFModifier.TF_MOD_SIZE, TFPotency.MINOR_BOOST, user, target));
+		if(minorEffects && !target.getFaceOrificeModifiers().contains(OrificeModifier.PUFFY))
+			possibleEffects.add(getRacialEffect(race, TFModifier.TF_FACE, TFModifier.TF_MOD_ORIFICE_PUFFY, TFPotency.MINOR_BOOST, user, target));
+		if(minorEffects && !target.getFaceOrificeModifiers().contains(OrificeModifier.RIBBED))
+			possibleEffects.add(getRacialEffect(race, TFModifier.TF_FACE, TFModifier.TF_MOD_ORIFICE_RIBBED, TFPotency.MINOR_BOOST, user, target));
+		if(minorEffects && !target.getFaceOrificeModifiers().contains(OrificeModifier.MUSCLE_CONTROL))
+			possibleEffects.add(getRacialEffect(race, TFModifier.TF_FACE, TFModifier.TF_MOD_ORIFICE_MUSCLED, TFPotency.MINOR_BOOST, user, target));
+		if(minorEffects && !target.getFaceOrificeModifiers().contains(OrificeModifier.TENTACLED))
+			possibleEffects.add(getRacialEffect(race, TFModifier.TF_FACE, TFModifier.TF_MOD_ORIFICE_TENTACLED, TFPotency.MINOR_BOOST, user, target));
+		if(midEffects && target.getFaceCapacity() == Capacity.ZERO_IMPENETRABLE)
+			possibleEffects.add(getRacialEffect(race, TFModifier.TF_FACE, TFModifier.TF_MOD_CAPACITY, TFPotency.MINOR_BOOST, user, target));
+		if(midEffects && target.getFaceDepth() != OrificeDepth.SEVEN_FATHOMLESS)
+			possibleEffects.add(getRacialEffect(race, TFModifier.TF_FACE, TFModifier.TF_MOD_DEPTH, TFPotency.MINOR_BOOST, user, target));
+		if(midEffects && target.getFaceElasticity() != OrificeElasticity.SEVEN_ELASTIC)
+			possibleEffects.add(getRacialEffect(race, TFModifier.TF_FACE, TFModifier.TF_MOD_ELASTICITY, TFPotency.MINOR_BOOST, user, target));
+		if(midEffects && target.getFacePlasticity() != OrificePlasticity.SEVEN_MOULDABLE)
+			possibleEffects.add(getRacialEffect(race, TFModifier.TF_FACE, TFModifier.TF_MOD_PLASTICITY, TFPotency.MINOR_BOOST, user, target));
+		if(midEffects && target.getFaceWetness() != Wetness.SEVEN_DROOLING)
+			possibleEffects.add(getRacialEffect(race, TFModifier.TF_FACE, TFModifier.TF_MOD_WETNESS, TFPotency.MINOR_BOOST, user, target));
+		if(target.getTongueLength() != TongueLength.FOUR_ABSURDLY_LONG)
+			possibleEffects.add(getRacialEffect(race, TFModifier.TF_FACE, TFModifier.TF_MOD_SIZE_SECONDARY, TFPotency.BOOST, user, target));
+		if(minorEffects && target.getBody().getFace().getTongue().getTongueModifiers().size() < 3) {
+			if(!target.hasTongueModifier(TongueModifier.RIBBED))
+				possibleEffects.add(getRacialEffect(race, TFModifier.TF_FACE, TFModifier.TF_MOD_TONGUE_RIBBED, TFPotency.MINOR_BOOST, user, target));
+			if(!target.hasTongueModifier(TongueModifier.TENTACLED))
+				possibleEffects.add(getRacialEffect(race, TFModifier.TF_FACE, TFModifier.TF_MOD_TONGUE_TENTACLED, TFPotency.MINOR_BOOST, user, target));
+			if(!target.hasTongueModifier(TongueModifier.BIFURCATED))
+				possibleEffects.add(getRacialEffect(race, TFModifier.TF_FACE, TFModifier.TF_MOD_TONGUE_BIFURCATED, TFPotency.MINOR_BOOST, user, target));
+			if(!target.hasTongueModifier(TongueModifier.WIDE))
+				possibleEffects.add(getRacialEffect(race, TFModifier.TF_FACE, TFModifier.TF_MOD_TONGUE_WIDE, TFPotency.MINOR_BOOST, user, target));
+			if(!target.hasTongueModifier(TongueModifier.FLAT))
+				possibleEffects.add(getRacialEffect(race, TFModifier.TF_FACE, TFModifier.TF_MOD_TONGUE_FLAT, TFPotency.MINOR_BOOST, user, target));
+			if(!target.hasTongueModifier(TongueModifier.STRONG))
+				possibleEffects.add(getRacialEffect(race, TFModifier.TF_FACE, TFModifier.TF_MOD_TONGUE_STRONG, TFPotency.MINOR_BOOST, user, target));
+		}
+
+		//Core
+		if(target.getHeightValue() > (!target.getSubspecies().isShortStature() ? Height.getShortStatureCutOff() : Height.NEGATIVE_THREE_MINIMUM.getMinimumValue()))
+			possibleEffects.add(getRacialEffect(race, TFModifier.TF_CORE, TFModifier.TF_MOD_SIZE, TFPotency.DRAIN, user, target));
+		if(target.getMuscle() != Muscle.ZERO_SOFT)
+			possibleEffects.add(getRacialEffect(race, TFModifier.TF_CORE, TFModifier.TF_MOD_SIZE_SECONDARY, TFPotency.MINOR_DRAIN, user, target));
+		if(target.getBodySizeValue() < 40)
+			possibleEffects.add(getRacialEffect(race, TFModifier.TF_CORE, TFModifier.TF_MOD_SIZE_TERTIARY, TFPotency.MINOR_BOOST, user, target));
+		if(target.getFemininity() != Femininity.FEMININE_STRONG)
+			possibleEffects.add(getRacialEffect(race, TFModifier.TF_CORE, TFModifier.TF_MOD_FEMININITY, TFPotency.BOOST, user, target));
+		
+		//Hair
+		if(target.hasHair() && target.getHairLength() != HairLength.SEVEN_TO_FLOOR)
+			possibleEffects.add(getRacialEffect(race, TFModifier.TF_HAIR, TFModifier.TF_MOD_SIZE, TFPotency.BOOST, user, target));
+		
+		//Tail
+		if(target.hasTail() && target.getTailLengthAsPercentageOfHeight() < Tail.LENGTH_PERCENTAGE_MAX)
+			possibleEffects.add(getRacialEffect(race, TFModifier.TF_TAIL, TFModifier.TF_MOD_SIZE, TFPotency.BOOST, user, target));
+		if(target.hasTail() && target.getTailGirth() != PenetrationGirth.SEVEN_FAT)
+			possibleEffects.add(getRacialEffect(race, TFModifier.TF_TAIL, TFModifier.TF_MOD_SIZE_SECONDARY, TFPotency.MINOR_BOOST, user, target));
+		
+		//Wings
+		if(target.hasWings() && target.getWingSize() != WingSize.FOUR_HUGE)
+			possibleEffects.add(getRacialEffect(race, TFModifier.TF_WINGS, TFModifier.TF_MOD_SIZE, TFPotency.MINOR_BOOST, user, target));
+
+		//Ass
+		if(target.getAssSize() != AssSize.SEVEN_GIGANTIC)
+			possibleEffects.add(getRacialEffect(race, TFModifier.TF_ASS, TFModifier.TF_MOD_SIZE, TFPotency.MINOR_BOOST, user, target));
+		if(target.getHipSize() != HipSize.SEVEN_ABSURDLY_WIDE)
+			possibleEffects.add(getRacialEffect(race, TFModifier.TF_ASS, TFModifier.TF_MOD_SIZE_SECONDARY, TFPotency.MINOR_BOOST, user, target));
+		if(midEffects && target.getAssCapacity() == Capacity.ZERO_IMPENETRABLE)
+			possibleEffects.add(getRacialEffect(race, TFModifier.TF_ASS, TFModifier.TF_MOD_CAPACITY, TFPotency.MINOR_BOOST, user, target));
+		if(midEffects && target.getAssDepth() != OrificeDepth.SEVEN_FATHOMLESS)
+			possibleEffects.add(getRacialEffect(race, TFModifier.TF_ASS, TFModifier.TF_MOD_DEPTH, TFPotency.MINOR_BOOST, user, target));
+		if(midEffects && target.getAssElasticity() != OrificeElasticity.SEVEN_ELASTIC)
+			possibleEffects.add(getRacialEffect(race, TFModifier.TF_ASS, TFModifier.TF_MOD_ELASTICITY, TFPotency.MINOR_BOOST, user, target));
+		if(midEffects && target.getAssPlasticity() != OrificePlasticity.SEVEN_MOULDABLE)
+			possibleEffects.add(getRacialEffect(race, TFModifier.TF_ASS, TFModifier.TF_MOD_PLASTICITY, TFPotency.MINOR_BOOST, user, target));
+		if(midEffects && target.getAssWetness() != Wetness.SEVEN_DROOLING)
+			possibleEffects.add(getRacialEffect(race, TFModifier.TF_ASS, TFModifier.TF_MOD_WETNESS, TFPotency.MINOR_BOOST, user, target));
+		if(minorEffects && target.getAssOrificeModifiers().size() < 2) {
+			if(!target.getAssOrificeModifiers().contains(OrificeModifier.PUFFY))
+				possibleEffects.add(getRacialEffect(race, TFModifier.TF_ASS, TFModifier.TF_MOD_ORIFICE_PUFFY, TFPotency.MINOR_BOOST, user, target));
+			if(!target.getAssOrificeModifiers().contains(OrificeModifier.RIBBED))
+				possibleEffects.add(getRacialEffect(race, TFModifier.TF_ASS, TFModifier.TF_MOD_ORIFICE_RIBBED, TFPotency.MINOR_BOOST, user, target));
+			if(!target.getAssOrificeModifiers().contains(OrificeModifier.MUSCLE_CONTROL))
+				possibleEffects.add(getRacialEffect(race, TFModifier.TF_ASS, TFModifier.TF_MOD_ORIFICE_MUSCLED, TFPotency.MINOR_BOOST, user, target));
+			if(!target.getAssOrificeModifiers().contains(OrificeModifier.TENTACLED))
+				possibleEffects.add(getRacialEffect(race, TFModifier.TF_ASS, TFModifier.TF_MOD_ORIFICE_TENTACLED, TFPotency.MINOR_BOOST, user, target));
+		}
+		
+		//Breasts
+		if(target.getBreastRawSizeValue() != CupSize.N.getMeasurement())
+			possibleEffects.add(getRacialEffect(race, TFModifier.TF_BREASTS, TFModifier.TF_MOD_SIZE, TFPotency.MINOR_BOOST, user, target));
+		if(target.getBreastRawSizeValue() < CupSize.C.getMeasurement())
+			possibleEffects.add(getRacialEffect(race, TFModifier.TF_BREASTS, TFModifier.TF_MOD_SIZE, TFPotency.BOOST, user, target));
+		if(target.getBreastRows() < Breast.MAXIMUM_BREAST_ROWS)
+			possibleEffects.add(getRacialEffect(race, TFModifier.TF_BREASTS, TFModifier.TF_MOD_COUNT, TFPotency.MINOR_BOOST, user, target));
+		if(target.getNippleCountPerBreast() < Breast.MAXIMUM_NIPPLES_PER_BREAST)
+			possibleEffects.add(getRacialEffect(race, TFModifier.TF_BREASTS, TFModifier.TF_MOD_COUNT_SECONDARY, TFPotency.MINOR_BOOST, user, target));
+		if(target.getNippleSize() != NippleSize.FOUR_MASSIVE)
+			possibleEffects.add(getRacialEffect(race, TFModifier.TF_BREASTS, TFModifier.TF_MOD_SIZE_SECONDARY, TFPotency.MINOR_BOOST, user, target));
+		if(target.getAreolaeSize() != AreolaeSize.FOUR_MASSIVE)
+			possibleEffects.add(getRacialEffect(race, TFModifier.TF_BREASTS, TFModifier.TF_MOD_SIZE_TERTIARY, TFPotency.MINOR_BOOST, user, target));
+		if(midEffects && target.getNippleShape() == NippleShape.NORMAL) {
+			if(Math.random() < 0.5)
+				possibleEffects.add(getRacialEffect(race, TFModifier.TF_BREASTS, TFModifier.TF_MOD_NIPPLE_LIPS, TFPotency.MINOR_BOOST, user, target));
+			else
+				possibleEffects.add(getRacialEffect(race, TFModifier.TF_BREASTS, TFModifier.TF_MOD_NIPPLE_VAGINA, TFPotency.MINOR_BOOST, user, target));
+		}
+		if(target.getBreastRawMilkStorageValue() < Lactation.SIX_EXTREME_AMOUNT_DRIPPING.getMinimumValue())
+			possibleEffects.add(getRacialEffect(race, TFModifier.TF_BREASTS, TFModifier.TF_MOD_WETNESS, TFPotency.MAJOR_BOOST, user, target));
+		if(target.getBreastRawLactationRegenerationValue() < FluidRegeneration.THREE_RAPID.getMinimumRegenerationValuePerDay())
+			possibleEffects.add(getRacialEffect(race, TFModifier.TF_BREASTS, TFModifier.TF_MOD_REGENERATION, TFPotency.MAJOR_BOOST, user, target));
+		if(midEffects && target.getNippleCapacity() == Capacity.ZERO_IMPENETRABLE)
+			possibleEffects.add(getRacialEffect(race, TFModifier.TF_BREASTS, TFModifier.TF_MOD_CAPACITY, TFPotency.MINOR_BOOST, user, target));
+		else {
+			if(midEffects && target.getNippleDepth() != OrificeDepth.SEVEN_FATHOMLESS)
+				possibleEffects.add(getRacialEffect(race, TFModifier.TF_BREASTS, TFModifier.TF_MOD_DEPTH, TFPotency.MINOR_BOOST, user, target));
+			if(midEffects && target.getNippleElasticity() != OrificeElasticity.SEVEN_ELASTIC)
+				possibleEffects.add(getRacialEffect(race, TFModifier.TF_BREASTS, TFModifier.TF_MOD_ELASTICITY, TFPotency.MINOR_BOOST, user, target));
+			if(midEffects && target.getNipplePlasticity() != OrificePlasticity.SEVEN_MOULDABLE)
+				possibleEffects.add(getRacialEffect(race, TFModifier.TF_BREASTS, TFModifier.TF_MOD_PLASTICITY, TFPotency.MINOR_BOOST, user, target));
+			if(minorEffects && target.getNippleOrificeModifiers().size() < 2) {
+				if(!target.getNippleOrificeModifiers().contains(OrificeModifier.PUFFY))
+					possibleEffects.add(getRacialEffect(race, TFModifier.TF_BREASTS, TFModifier.TF_MOD_ORIFICE_PUFFY, TFPotency.MINOR_BOOST, user, target));
+				if(!target.getNippleOrificeModifiers().contains(OrificeModifier.RIBBED))
+					possibleEffects.add(getRacialEffect(race, TFModifier.TF_BREASTS, TFModifier.TF_MOD_ORIFICE_RIBBED, TFPotency.MINOR_BOOST, user, target));
+				if(!target.getNippleOrificeModifiers().contains(OrificeModifier.MUSCLE_CONTROL))
+					possibleEffects.add(getRacialEffect(race, TFModifier.TF_BREASTS, TFModifier.TF_MOD_ORIFICE_MUSCLED, TFPotency.MINOR_BOOST, user, target));
+				if(!target.getNippleOrificeModifiers().contains(OrificeModifier.TENTACLED))
+					possibleEffects.add(getRacialEffect(race, TFModifier.TF_BREASTS, TFModifier.TF_MOD_ORIFICE_TENTACLED, TFPotency.MINOR_BOOST, user, target));
+			}
+		}
+
+		//Crotch breasts
+		if(target.hasBreastsCrotch()) {
+			if(target.getBreastCrotchRawSizeValue() != CupSize.N.getMeasurement())
+				possibleEffects.add(getRacialEffect(race, TFModifier.TF_BREASTS_CROTCH, TFModifier.TF_MOD_SIZE, TFPotency.MINOR_BOOST, user, target));
+			if(target.getBreastCrotchRawSizeValue() < CupSize.C.getMeasurement())
+				possibleEffects.add(getRacialEffect(race, TFModifier.TF_BREASTS_CROTCH, TFModifier.TF_MOD_SIZE, TFPotency.BOOST, user, target));
+			if(target.getBreastCrotchRows() < BreastCrotch.MAXIMUM_BREAST_ROWS)
+				possibleEffects.add(getRacialEffect(race, TFModifier.TF_BREASTS_CROTCH, TFModifier.TF_MOD_COUNT, TFPotency.MINOR_BOOST, user, target));
+			if(target.getNippleCrotchCountPerBreast() < BreastCrotch.MAXIMUM_NIPPLES_PER_BREAST)
+				possibleEffects.add(getRacialEffect(race, TFModifier.TF_BREASTS_CROTCH, TFModifier.TF_MOD_COUNT_SECONDARY, TFPotency.MINOR_BOOST, user, target));
+			if(target.getNippleCrotchSize() != NippleSize.FOUR_MASSIVE)
+				possibleEffects.add(getRacialEffect(race, TFModifier.TF_BREASTS_CROTCH, TFModifier.TF_MOD_SIZE_SECONDARY, TFPotency.MINOR_BOOST, user, target));
+			if(target.getAreolaeCrotchSize() != AreolaeSize.FOUR_MASSIVE)
+				possibleEffects.add(getRacialEffect(race, TFModifier.TF_BREASTS_CROTCH, TFModifier.TF_MOD_SIZE_TERTIARY, TFPotency.MINOR_BOOST, user, target));
+			if(midEffects && target.getNippleCrotchShape() == NippleShape.NORMAL) {
+				if(Math.random() < 0.5)
+					possibleEffects.add(getRacialEffect(race, TFModifier.TF_BREASTS_CROTCH, TFModifier.TF_MOD_NIPPLE_LIPS, TFPotency.MINOR_BOOST, user, target));
+				else
+					possibleEffects.add(getRacialEffect(race, TFModifier.TF_BREASTS_CROTCH, TFModifier.TF_MOD_NIPPLE_VAGINA, TFPotency.MINOR_BOOST, user, target));
+			}
+			if(target.getBreastCrotchRawMilkStorageValue() < Lactation.SIX_EXTREME_AMOUNT_DRIPPING.getMinimumValue())
+				possibleEffects.add(getRacialEffect(race, TFModifier.TF_BREASTS_CROTCH, TFModifier.TF_MOD_WETNESS, TFPotency.MAJOR_BOOST, user, target));
+			if(target.getBreastCrotchRawLactationRegenerationValue() < FluidRegeneration.THREE_RAPID.getMinimumRegenerationValuePerDay())
+				possibleEffects.add(getRacialEffect(race, TFModifier.TF_BREASTS_CROTCH, TFModifier.TF_MOD_REGENERATION, TFPotency.MAJOR_BOOST, user, target));
+			if(midEffects && target.getNippleCrotchCapacity() == Capacity.ZERO_IMPENETRABLE)
+				possibleEffects.add(getRacialEffect(race, TFModifier.TF_BREASTS_CROTCH, TFModifier.TF_MOD_CAPACITY, TFPotency.MINOR_BOOST, user, target));
+			else {
+				if(midEffects && target.getNippleCrotchDepth() != OrificeDepth.SEVEN_FATHOMLESS)
+					possibleEffects.add(getRacialEffect(race, TFModifier.TF_BREASTS_CROTCH, TFModifier.TF_MOD_DEPTH, TFPotency.MINOR_BOOST, user, target));
+				if(midEffects && target.getNippleCrotchElasticity() != OrificeElasticity.SEVEN_ELASTIC)
+					possibleEffects.add(getRacialEffect(race, TFModifier.TF_BREASTS_CROTCH, TFModifier.TF_MOD_ELASTICITY, TFPotency.MINOR_BOOST, user, target));
+				if(midEffects && target.getNippleCrotchPlasticity() != OrificePlasticity.SEVEN_MOULDABLE)
+					possibleEffects.add(getRacialEffect(race, TFModifier.TF_BREASTS_CROTCH, TFModifier.TF_MOD_PLASTICITY, TFPotency.MINOR_BOOST, user, target));
+				if(minorEffects && target.getNippleCrotchOrificeModifiers().size() < 2) {
+					if(!target.getNippleCrotchOrificeModifiers().contains(OrificeModifier.PUFFY))
+						possibleEffects.add(getRacialEffect(race, TFModifier.TF_BREASTS_CROTCH, TFModifier.TF_MOD_ORIFICE_PUFFY, TFPotency.MINOR_BOOST, user, target));
+					if(!target.getNippleCrotchOrificeModifiers().contains(OrificeModifier.RIBBED))
+						possibleEffects.add(getRacialEffect(race, TFModifier.TF_BREASTS_CROTCH, TFModifier.TF_MOD_ORIFICE_RIBBED, TFPotency.MINOR_BOOST, user, target));
+					if(!target.getNippleCrotchOrificeModifiers().contains(OrificeModifier.MUSCLE_CONTROL))
+						possibleEffects.add(getRacialEffect(race, TFModifier.TF_BREASTS_CROTCH, TFModifier.TF_MOD_ORIFICE_MUSCLED, TFPotency.MINOR_BOOST, user, target));
+					if(!target.getNippleCrotchOrificeModifiers().contains(OrificeModifier.TENTACLED))
+						possibleEffects.add(getRacialEffect(race, TFModifier.TF_BREASTS_CROTCH, TFModifier.TF_MOD_ORIFICE_TENTACLED, TFPotency.MINOR_BOOST, user, target));
+				}
+			}
+		} else {
+			possibleEffects.add(getRacialEffect(race, TFModifier.TF_BREASTS_CROTCH, TFModifier.TF_TYPE_1, TFPotency.MINOR_BOOST, user, target));
+		}
+
+
+		//Penis
+		if(target.hasPenis()) {
+			if(target.getPenisRawSizeValue() < PenisLength.SEVEN_STALLION.getMinimumValue())
+				possibleEffects.add(getRacialEffect(race, TFModifier.TF_PENIS, TFModifier.TF_MOD_SIZE, TFPotency.BOOST, user, target));
+			if(target.getPenisGirth() != PenetrationGirth.SEVEN_FAT)
+				possibleEffects.add(getRacialEffect(race, TFModifier.TF_PENIS, TFModifier.TF_MOD_SIZE_SECONDARY, TFPotency.MINOR_BOOST, user, target));
+			if(minorEffects && target.getPenisModifiers().size() < 4) {
+				if(target.getPenisModifiers().contains(PenetrationModifier.BARBED))
+					possibleEffects.add(getRacialEffect(race, TFModifier.TF_PENIS, TFModifier.TF_MOD_PENIS_BARBED, TFPotency.MINOR_BOOST, user, target));
+				if(target.getPenisModifiers().contains(PenetrationModifier.FLARED))
+					possibleEffects.add(getRacialEffect(race, TFModifier.TF_PENIS, TFModifier.TF_MOD_PENIS_FLARED, TFPotency.MINOR_BOOST, user, target));
+				if(target.getPenisModifiers().contains(PenetrationModifier.BLUNT))
+					possibleEffects.add(getRacialEffect(race, TFModifier.TF_PENIS, TFModifier.TF_MOD_PENIS_BLUNT, TFPotency.MINOR_BOOST, user, target));
+				if(target.getPenisModifiers().contains(PenetrationModifier.KNOTTED))
+					possibleEffects.add(getRacialEffect(race, TFModifier.TF_PENIS, TFModifier.TF_MOD_PENIS_KNOTTED, TFPotency.MINOR_BOOST, user, target));
+				if(target.getPenisModifiers().contains(PenetrationModifier.PREHENSILE))
+					possibleEffects.add(getRacialEffect(race, TFModifier.TF_PENIS, TFModifier.TF_MOD_PENIS_PREHENSILE, TFPotency.MINOR_BOOST, user, target));
+				if(target.getPenisModifiers().contains(PenetrationModifier.RIBBED))
+					possibleEffects.add(getRacialEffect(race, TFModifier.TF_PENIS, TFModifier.TF_MOD_PENIS_RIBBED, TFPotency.MINOR_BOOST, user, target));
+				if(target.getPenisModifiers().contains(PenetrationModifier.SHEATHED))
+					possibleEffects.add(getRacialEffect(race, TFModifier.TF_PENIS, TFModifier.TF_MOD_PENIS_SHEATHED, TFPotency.MINOR_BOOST, user, target));
+				if(target.getPenisModifiers().contains(PenetrationModifier.TAPERED))
+					possibleEffects.add(getRacialEffect(race, TFModifier.TF_PENIS, TFModifier.TF_MOD_PENIS_TAPERED, TFPotency.MINOR_BOOST, user, target));
+				if(target.getPenisModifiers().contains(PenetrationModifier.TENTACLED))
+					possibleEffects.add(getRacialEffect(race, TFModifier.TF_PENIS, TFModifier.TF_MOD_PENIS_TENTACLED, TFPotency.MINOR_BOOST, user, target));
+				if(target.getPenisModifiers().contains(PenetrationModifier.VEINY))
+					possibleEffects.add(getRacialEffect(race, TFModifier.TF_PENIS, TFModifier.TF_MOD_PENIS_VEINY, TFPotency.MINOR_BOOST, user, target));
+			}
+			if(minorEffects && target.getPenisModifiers().contains(PenetrationModifier.OVIPOSITOR))
+				possibleEffects.add(getRacialEffect(race, TFModifier.TF_PENIS, TFModifier.TF_MOD_PENIS_OVIPOSITOR, TFPotency.MINOR_BOOST, user, target));
+			if(target.getTesticleSize() != TesticleSize.SEVEN_ABSURD)
+				possibleEffects.add(getRacialEffect(race, TFModifier.TF_PENIS, TFModifier.TF_MOD_SIZE_TERTIARY, TFPotency.MINOR_BOOST, user, target));
+			if(target.getTesticleCount() < Testicle.MAX_TESTICLE_COUNT)
+				possibleEffects.add(getRacialEffect(race, TFModifier.TF_PENIS, TFModifier.TF_MOD_COUNT, TFPotency.MINOR_BOOST, user, target));
+			if(target.getPenisRawCumStorageValue() < CumProduction.SIX_EXTREME.getMinimumValue())
+				possibleEffects.add(getRacialEffect(race, TFModifier.TF_PENIS, TFModifier.TF_MOD_WETNESS, TFPotency.MAJOR_BOOST, user, target));
+			if(target.getPenisRawCumProductionRegenerationValue() < FluidRegeneration.THREE_RAPID.getMinimumRegenerationValuePerDay())
+				possibleEffects.add(getRacialEffect(race, TFModifier.TF_PENIS, TFModifier.TF_MOD_REGENERATION, TFPotency.MAJOR_BOOST, user, target));
+			if(midEffects && target.getPenisCapacity() == Capacity.ZERO_IMPENETRABLE)
+				possibleEffects.add(getRacialEffect(race, TFModifier.TF_PENIS, TFModifier.TF_MOD_CAPACITY, TFPotency.MINOR_BOOST, user, target));
+			else {
+				if(midEffects && target.getUrethraDepth() != OrificeDepth.SEVEN_FATHOMLESS)
+					possibleEffects.add(getRacialEffect(race, TFModifier.TF_PENIS, TFModifier.TF_MOD_DEPTH, TFPotency.MINOR_BOOST, user, target));
+				if(midEffects && target.getUrethraElasticity() != OrificeElasticity.SEVEN_ELASTIC)
+					possibleEffects.add(getRacialEffect(race, TFModifier.TF_PENIS, TFModifier.TF_MOD_ELASTICITY, TFPotency.MINOR_BOOST, user, target));
+				if(midEffects && target.getUrethraPlasticity() != OrificePlasticity.SEVEN_MOULDABLE)
+					possibleEffects.add(getRacialEffect(race, TFModifier.TF_PENIS, TFModifier.TF_MOD_PLASTICITY, TFPotency.MINOR_BOOST, user, target));
+				if(minorEffects && target.getUrethraOrificeModifiers().size() < 2) {
+					if(!target.getUrethraOrificeModifiers().contains(OrificeModifier.PUFFY))
+						possibleEffects.add(getRacialEffect(race, TFModifier.TF_PENIS, TFModifier.TF_MOD_ORIFICE_PUFFY, TFPotency.MINOR_BOOST, user, target));
+					if(!target.getUrethraOrificeModifiers().contains(OrificeModifier.RIBBED))
+						possibleEffects.add(getRacialEffect(race, TFModifier.TF_PENIS, TFModifier.TF_MOD_ORIFICE_RIBBED, TFPotency.MINOR_BOOST, user, target));
+					if(!target.getUrethraOrificeModifiers().contains(OrificeModifier.MUSCLE_CONTROL))
+						possibleEffects.add(getRacialEffect(race, TFModifier.TF_PENIS, TFModifier.TF_MOD_ORIFICE_MUSCLED, TFPotency.MINOR_BOOST, user, target));
+					if(!target.getUrethraOrificeModifiers().contains(OrificeModifier.TENTACLED))
+						possibleEffects.add(getRacialEffect(race, TFModifier.TF_PENIS, TFModifier.TF_MOD_ORIFICE_TENTACLED, TFPotency.MINOR_BOOST, user, target));
+				}
+			}
+		} else {
+			possibleEffects.add(getRacialEffect(race, TFModifier.TF_PENIS, TFModifier.TF_TYPE_1, TFPotency.MINOR_BOOST, user, target));
+		}
+
+		//Vagina
+		if(target.hasVagina()) {
+			if(target.getVaginaRawClitorisSizeValue() < ClitorisSize.SEVEN_STALLION.getMinimumValue())
+				possibleEffects.add(getRacialEffect(race, TFModifier.TF_VAGINA, TFModifier.TF_MOD_SIZE, TFPotency.BOOST, user, target));
+			if(target.getClitorisGirth() != PenetrationGirth.SEVEN_FAT)
+				possibleEffects.add(getRacialEffect(race, TFModifier.TF_VAGINA, TFModifier.TF_MOD_SIZE_SECONDARY, TFPotency.MINOR_BOOST, user, target));
+			if(minorEffects && !target.isVaginaSquirter())
+				possibleEffects.add(getRacialEffect(race, TFModifier.TF_VAGINA, TFModifier.TF_MOD_VAGINA_SQUIRTER, TFPotency.MINOR_BOOST, user, target));
+			if(minorEffects && !target.isVaginaEggLayer())
+				possibleEffects.add(getRacialEffect(race, TFModifier.TF_VAGINA, TFModifier.TF_MOD_VAGINA_EGG_LAYER, TFPotency.MINOR_BOOST, user, target));
+			if(target.getVaginaCapacity() == Capacity.ZERO_IMPENETRABLE)
+				possibleEffects.add(getRacialEffect(race, TFModifier.TF_VAGINA, TFModifier.TF_MOD_CAPACITY, TFPotency.MINOR_BOOST, user, target));
+			if(midEffects && target.getVaginaDepth() != OrificeDepth.SEVEN_FATHOMLESS)
+				possibleEffects.add(getRacialEffect(race, TFModifier.TF_VAGINA, TFModifier.TF_MOD_DEPTH, TFPotency.MINOR_BOOST, user, target));
+			if(midEffects && target.getVaginaElasticity() != OrificeElasticity.SEVEN_ELASTIC)
+				possibleEffects.add(getRacialEffect(race, TFModifier.TF_VAGINA, TFModifier.TF_MOD_ELASTICITY, TFPotency.MINOR_BOOST, user, target));
+			if(midEffects && target.getVaginaPlasticity() != OrificePlasticity.SEVEN_MOULDABLE)
+				possibleEffects.add(getRacialEffect(race, TFModifier.TF_VAGINA, TFModifier.TF_MOD_PLASTICITY, TFPotency.MINOR_BOOST, user, target));
+			if(midEffects && target.getVaginaWetness().getValue() < Wetness.SEVEN_DROOLING.getValue())
+				possibleEffects.add(getRacialEffect(race, TFModifier.TF_VAGINA, TFModifier.TF_MOD_WETNESS, TFPotency.MINOR_BOOST, user, target));
+			if(minorEffects && target.getVaginaOrificeModifiers().size() < 2) {
+				if(!target.getVaginaOrificeModifiers().contains(OrificeModifier.PUFFY))
+					possibleEffects.add(getRacialEffect(race, TFModifier.TF_VAGINA, TFModifier.TF_MOD_ORIFICE_PUFFY, TFPotency.MINOR_BOOST, user, target));
+				if(!target.getVaginaOrificeModifiers().contains(OrificeModifier.RIBBED))
+					possibleEffects.add(getRacialEffect(race, TFModifier.TF_VAGINA, TFModifier.TF_MOD_ORIFICE_RIBBED, TFPotency.MINOR_BOOST, user, target));
+				if(!target.getVaginaOrificeModifiers().contains(OrificeModifier.MUSCLE_CONTROL))
+					possibleEffects.add(getRacialEffect(race, TFModifier.TF_VAGINA, TFModifier.TF_MOD_ORIFICE_MUSCLED, TFPotency.MINOR_BOOST, user, target));
+				if(!target.getVaginaOrificeModifiers().contains(OrificeModifier.TENTACLED))
+					possibleEffects.add(getRacialEffect(race, TFModifier.TF_VAGINA, TFModifier.TF_MOD_ORIFICE_TENTACLED, TFPotency.MINOR_BOOST, user, target));
+			}
+			if(midEffects && target.getVaginaUrethraCapacity() == Capacity.ZERO_IMPENETRABLE)
+				possibleEffects.add(getRacialEffect(race, TFModifier.TF_VAGINA, TFModifier.TF_MOD_CAPACITY_2, TFPotency.MINOR_BOOST, user, target));
+			else {
+				if(midEffects && target.getVaginaUrethraDepth() != OrificeDepth.SEVEN_FATHOMLESS)
+					possibleEffects.add(getRacialEffect(race, TFModifier.TF_VAGINA, TFModifier.TF_MOD_DEPTH_2, TFPotency.MINOR_BOOST, user, target));
+				if(midEffects && target.getVaginaUrethraElasticity() != OrificeElasticity.SEVEN_ELASTIC)
+					possibleEffects.add(getRacialEffect(race, TFModifier.TF_VAGINA, TFModifier.TF_MOD_ELASTICITY_2, TFPotency.MINOR_BOOST, user, target));
+				if(midEffects && target.getVaginaUrethraPlasticity() != OrificePlasticity.SEVEN_MOULDABLE)
+					possibleEffects.add(getRacialEffect(race, TFModifier.TF_VAGINA, TFModifier.TF_MOD_PLASTICITY_2, TFPotency.MINOR_BOOST, user, target));
+				if(minorEffects && target.getVaginaUrethraOrificeModifiers().size() < 2) {
+					if(!target.getVaginaUrethraOrificeModifiers().contains(OrificeModifier.PUFFY))
+						possibleEffects.add(getRacialEffect(race, TFModifier.TF_VAGINA, TFModifier.TF_MOD_ORIFICE_PUFFY_2, TFPotency.MINOR_BOOST, user, target));
+					if(!target.getVaginaUrethraOrificeModifiers().contains(OrificeModifier.RIBBED))
+						possibleEffects.add(getRacialEffect(race, TFModifier.TF_VAGINA, TFModifier.TF_MOD_ORIFICE_RIBBED_2, TFPotency.MINOR_BOOST, user, target));
+					if(!target.getVaginaUrethraOrificeModifiers().contains(OrificeModifier.MUSCLE_CONTROL))
+						possibleEffects.add(getRacialEffect(race, TFModifier.TF_VAGINA, TFModifier.TF_MOD_ORIFICE_MUSCLED_2, TFPotency.MINOR_BOOST, user, target));
+					if(!target.getVaginaUrethraOrificeModifiers().contains(OrificeModifier.TENTACLED))
+						possibleEffects.add(getRacialEffect(race, TFModifier.TF_VAGINA, TFModifier.TF_MOD_ORIFICE_TENTACLED_2, TFPotency.MINOR_BOOST, user, target));
+				}
+			}
+			if(minorEffects && target.isClitorisPseudoPenis() && target.getClitorisModifiers().size() < 4) {
+				if(target.getClitorisModifiers().contains(PenetrationModifier.BARBED))
+					possibleEffects.add(getRacialEffect(race, TFModifier.TF_VAGINA, TFModifier.TF_MOD_PENIS_BARBED, TFPotency.MINOR_BOOST, user, target));
+				if(target.getClitorisModifiers().contains(PenetrationModifier.FLARED))
+					possibleEffects.add(getRacialEffect(race, TFModifier.TF_VAGINA, TFModifier.TF_MOD_PENIS_FLARED, TFPotency.MINOR_BOOST, user, target));
+				if(target.getClitorisModifiers().contains(PenetrationModifier.BLUNT))
+					possibleEffects.add(getRacialEffect(race, TFModifier.TF_VAGINA, TFModifier.TF_MOD_PENIS_BLUNT, TFPotency.MINOR_BOOST, user, target));
+				if(target.getClitorisModifiers().contains(PenetrationModifier.KNOTTED))
+					possibleEffects.add(getRacialEffect(race, TFModifier.TF_VAGINA, TFModifier.TF_MOD_PENIS_KNOTTED, TFPotency.MINOR_BOOST, user, target));
+				if(target.getClitorisModifiers().contains(PenetrationModifier.PREHENSILE))
+					possibleEffects.add(getRacialEffect(race, TFModifier.TF_VAGINA, TFModifier.TF_MOD_PENIS_PREHENSILE, TFPotency.MINOR_BOOST, user, target));
+				if(target.getClitorisModifiers().contains(PenetrationModifier.RIBBED))
+					possibleEffects.add(getRacialEffect(race, TFModifier.TF_VAGINA, TFModifier.TF_MOD_PENIS_RIBBED, TFPotency.MINOR_BOOST, user, target));
+				if(target.getClitorisModifiers().contains(PenetrationModifier.SHEATHED))
+					possibleEffects.add(getRacialEffect(race, TFModifier.TF_VAGINA, TFModifier.TF_MOD_PENIS_SHEATHED, TFPotency.MINOR_BOOST, user, target));
+				if(target.getClitorisModifiers().contains(PenetrationModifier.TAPERED))
+					possibleEffects.add(getRacialEffect(race, TFModifier.TF_VAGINA, TFModifier.TF_MOD_PENIS_TAPERED, TFPotency.MINOR_BOOST, user, target));
+				if(target.getClitorisModifiers().contains(PenetrationModifier.TENTACLED))
+					possibleEffects.add(getRacialEffect(race, TFModifier.TF_VAGINA, TFModifier.TF_MOD_PENIS_TENTACLED, TFPotency.MINOR_BOOST, user, target));
+				if(target.getClitorisModifiers().contains(PenetrationModifier.VEINY))
+					possibleEffects.add(getRacialEffect(race, TFModifier.TF_VAGINA, TFModifier.TF_MOD_PENIS_VEINY, TFPotency.MINOR_BOOST, user, target));
+			}
+			if(minorEffects && !target.getClitorisModifiers().contains(PenetrationModifier.OVIPOSITOR))
+				possibleEffects.add(getRacialEffect(race, TFModifier.TF_VAGINA, TFModifier.TF_MOD_PENIS_OVIPOSITOR, TFPotency.MINOR_BOOST, user, target));
+		} else {
+			possibleEffects.add(getRacialEffect(race, TFModifier.TF_VAGINA, TFModifier.TF_TYPE_1, TFPotency.MINOR_BOOST, user, target));
+		}
+
+		if(possibleEffects.isEmpty()) {
+			if(!midEffects) {
+				return RandomNonRacialTF(race, user, target, true, false);
+			} else if (!minorEffects) {
+				return RandomNonRacialTF(race, user, target, true, true);
+			} else {
+				possibleEffects.add(getRacialEffect(race, TFModifier.TF_BREASTS, TFModifier.TF_MOD_SIZE, TFPotency.MINOR_BOOST, user, target));
+			}
+		}
+
+		return Util.randomItemFrom(possibleEffects);
+
 	}
 
 	private static RacialEffectUtil getAntennaTypeRacialEffectUtil(AbstractRace race, GameCharacter target, int index) {
