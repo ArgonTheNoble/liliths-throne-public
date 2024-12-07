@@ -47,6 +47,7 @@ import com.lilithsthrone.game.character.body.valueEnums.CumProduction;
 import com.lilithsthrone.game.character.body.valueEnums.CupSize;
 import com.lilithsthrone.game.character.body.valueEnums.Femininity;
 import com.lilithsthrone.game.character.body.valueEnums.HipSize;
+import com.lilithsthrone.game.character.body.valueEnums.LegConfiguration;
 import com.lilithsthrone.game.character.body.valueEnums.LipSize;
 import com.lilithsthrone.game.character.body.valueEnums.Muscle;
 import com.lilithsthrone.game.character.body.valueEnums.OrificeModifier;
@@ -79,6 +80,7 @@ import com.lilithsthrone.game.character.race.RaceStage;
 import com.lilithsthrone.game.character.race.RacialBody;
 import com.lilithsthrone.game.character.race.Subspecies;
 import com.lilithsthrone.game.character.race.SubspeciesPreference;
+import com.lilithsthrone.game.character.race.SubspeciesSpawnRarity;
 import com.lilithsthrone.game.combat.spells.Spell;
 import com.lilithsthrone.game.dialogue.DialogueNode;
 import com.lilithsthrone.game.dialogue.responses.Response;
@@ -120,7 +122,9 @@ import com.lilithsthrone.utils.Util.Value;
 import com.lilithsthrone.utils.XMLSaving;
 import com.lilithsthrone.utils.colours.PresetColour;
 import com.lilithsthrone.world.AbstractWorldType;
+import com.lilithsthrone.world.WorldType;
 import com.lilithsthrone.world.places.AbstractPlaceType;
+import com.lilithsthrone.world.places.PlaceType;
 
 /**
  * @since 0.1.0
@@ -147,6 +151,7 @@ public abstract class NPC extends GameCharacter implements XMLSaving {
 	protected RaceStage raceStagePreference = null;
 	protected Body bodyPreference = null;
 	protected boolean feralPreference = false;
+	protected boolean wantTaur = false;
 
 	// Tracks what items/clothing should be generated for this NPC:
 	protected boolean generateExtraItems;
@@ -1589,6 +1594,14 @@ public abstract class NPC extends GameCharacter implements XMLSaving {
 			}
 
 			body = Main.game.getCharacterUtils().generateBody(null, this.getGenderPreference(), this.getSubspeciesPreference(), targetedRaceStage);
+			if(wantTaur && !subspeciesPreference.isNonBiped()) {
+				List<LegConfiguration> configs = subspeciesPreference.getRace().getRacialBody().getLegType().getAllowedLegConfigurations();
+				configs.remove(LegConfiguration.BIPEDAL);
+				configs.remove(LegConfiguration.WINGED_BIPED);
+				if(configs.size() > 0) {
+					body.applyLegConfigurationTransformation(body.getLegType(), configs.get(Util.random.nextInt(configs.size())), true);
+				}
+			}
 		}
 		Util.random = new Random();
 		
@@ -1617,7 +1630,7 @@ public abstract class NPC extends GameCharacter implements XMLSaving {
 			skipGenitalsTF = vaginaSet && penisSet;
 		}
 
-		int raceTFs = (1 + Util.random.nextInt(target.getFetishDesire(Fetish.FETISH_FURRY).getValue())) * (target.hasFetish(Fetish.FETISH_FURRY)?2:1);
+		int raceTFs = (Util.random.nextInt(target.getFetishDesire(Fetish.FETISH_FURRY).getValue() + 1)) * (target.hasFetish(Fetish.FETISH_FURRY)?2:1);
 		int partTFs = (1 + Util.random.nextInt(4)) * (target.hasFetish(Fetish.FETISH_TRANSFORMATION_RECEIVING)?2:1);
 		int bodyTFs = (1 + Util.random.nextInt(3)) * (target.hasFetish(Fetish.FETISH_TRANSFORMATION_RECEIVING)?2:1);
 		
@@ -2469,6 +2482,7 @@ public abstract class NPC extends GameCharacter implements XMLSaving {
 		
 		AbstractSubspecies species = getSubspecies();
 		RaceStage stage = getRaceStage();
+		wantTaur = this.getLegConfiguration() == LegConfiguration.BIPEDAL ? false : true;
 		
 		if(Main.getProperties().getForcedTFPreference()==FurryPreference.HUMAN) {
 			species = Subspecies.HUMAN;
@@ -2492,9 +2506,10 @@ public abstract class NPC extends GameCharacter implements XMLSaving {
 			
 			// Chance for race to be random:
 			if(Math.random() <= Main.getProperties().getRandomRacePercentage()) {
+ 
+				boolean wantTaur = (Util.random.nextInt(100) < Main.getProperties().taurSpawnRate * (this.getLegConfiguration() == LegConfiguration.BIPEDAL ? 1 : 3));
 
-				boolean wantTaur = (Util.random.nextInt(100) < Main.getProperties().taurSpawnRate * 2);
-
+				/*
 				List<Map.Entry<AbstractSubspecies, SubspeciesPreference>> sm = new ArrayList<>();
 				if(!preferredGender.isFeminine())
 					sm.addAll(Main.getProperties().getSubspeciesMasculinePreferencesMap().entrySet());
@@ -2511,6 +2526,52 @@ public abstract class NPC extends GameCharacter implements XMLSaving {
 					}
 				}
 				species = sm.get(Util.random.nextInt(sm.size())).getKey();
+				*/
+
+				Map<AbstractSubspecies, Integer> availableRaces = new HashMap<>();
+				for(AbstractSubspecies s : Subspecies.getAllSubspecies()) {
+					if(s.getSubspeciesOverridePriority()>0 || (!wantTaur && s.isNonBiped())) { // Do not spawn demonic races, elementals, or youko
+						continue;
+					}
+					AbstractWorldType world = this.worldLocation;
+					if(world == null)
+						world = WorldType.DOMINION;
+					AbstractPlaceType place = this.getLocationPlaceType();
+					if(place == null)
+						place = PlaceType.DOMINION_BACK_ALLEYS;
+					Map<AbstractSubspecies, SubspeciesSpawnRarity> subMap = Subspecies.getWorldSpecies(world, place, false);
+					if(subMap.containsKey(s)) {
+						AbstractSubspecies.addToSubspeciesMap((int) (10000 * subMap.get(s).getChanceMultiplier()), preferredGender, s, availableRaces);
+					}
+				}
+
+				double humanChance = Main.getProperties().humanSpawnRate/100f;;	
+				availableRaces.remove(Subspecies.HUMAN);
+				
+				if(preferredGender.isFeminine()) {
+					for(Entry<AbstractSubspecies, FurryPreference> entry : Main.getProperties().getSubspeciesFeminineFurryPreferencesMap().entrySet()) {
+						if(entry.getValue() == FurryPreference.HUMAN) {
+							availableRaces.remove(entry.getKey());
+						}
+					}
+				} else {
+					for(Entry<AbstractSubspecies, FurryPreference> entry : Main.getProperties().getSubspeciesMasculineFurryPreferencesMap().entrySet()) {
+						if(entry.getValue() == FurryPreference.HUMAN) {
+							availableRaces.remove(entry.getKey());
+						}
+					}
+				}
+				
+				total = 0;
+				for(Integer i : availableRaces.values()) {
+					total += i;
+				}
+				
+				if(availableRaces.isEmpty() || total==0 || Math.random()<humanChance) {
+					species = Subspecies.HUMAN;
+				} else {
+					species = Util.getRandomObjectFromWeightedMap(availableRaces);
+				}
 
 				/*
 				List<AbstractSubspecies> availableRaces = new ArrayList<>();
