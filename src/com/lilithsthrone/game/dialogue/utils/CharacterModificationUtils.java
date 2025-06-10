@@ -570,6 +570,7 @@ public class CharacterModificationUtils {
 				int i=0;
 				for(AbstractFetish fetish : Fetish.getAllFetishes()) {
 					if((fetish.isAvailable(BodyChanging.getTarget()) || (fetish==Fetish.FETISH_PURE_VIRGIN && Main.game.getPlayer().hasVagina())) // Always allow virgin fetish so that players can start as broken virgin
+							&& fetish.isContentEnabled()
 							&& fetish.getFetishesForAutomaticUnlock().isEmpty()) {
 						contentSB.append("<div class='container-full-width inner' style='width:100%; margin:0; padding:0; background:"+(i%2==0?PresetColour.BACKGROUND:PresetColour.BACKGROUND_ALT).toWebHexString()+";'>");
 						
@@ -994,7 +995,7 @@ public class CharacterModificationUtils {
 				BodyChanging.getTarget().getAppearsAsAgeValue()>=(BodyChanging.getTarget().getAgeValue()+BodyChanging.getTarget().getAgeDifferenceUpperLimit()))
 				
 				+ applyWrapper("Birthday",
-						UtilText.parse(BodyChanging.getTarget(), "[npc.NamePos] birthday can not ever be changed, but by transforming [npc.her] body, [npc.she] may appear to be younger or older than [npc.she] really [npc.is]."),
+						UtilText.parse(BodyChanging.getTarget(), "[npc.NamePos] birthday can never be changed, but by transforming [npc.her] body, [npc.she] may appear to be younger or older than [npc.she] really [npc.is]."),
 						"BIRTHDAY",
 						"<p style='text-align:center; margin:0; padding:0;'>"
 							+ BodyChanging.getTarget().getBirthdayString()
@@ -6632,13 +6633,13 @@ public class CharacterModificationUtils {
 		
 				for(AbstractTattooType type : TattooType.getConditionalTattooTypes(BodyChanging.getTarget())) {
 					if(type.getSlotAvailability().contains(tattooInventorySlot)) {
-						contentSB.append("<div style='width:18%; margin:1%; padding:0; display:inline-block;'>"
+						contentSB.append("<div style='width:23%; margin:1%; padding:0; display:inline-block;'>"
 											+ "<div class='normal-button"+(tattoo.getType()==type?" selected":"")+"' id='TATTOO_TYPE_"+type.getId()+"'"
 													+ " style='width:100%; margin:0; color:"+(tattoo.getType()==type?PresetColour.GENERIC_GOOD:PresetColour.TEXT_HALF_GREY).toWebHexString()+";'>"+Util.capitaliseSentence(type.getName())+"</div>"
 										+ "</div>");
 						
 					} else {
-						contentSB.append("<div style='width:18%; margin:1%; padding:0; display:inline-block;'>"
+						contentSB.append("<div style='width:23%; margin:1%; padding:0; display:inline-block;'>"
 								+ "<div class='normal-button disabled' id='TATTOO_TYPE_"+type.getId()+"'"
 										+ " style='width:100%; margin:0;'>"+Util.capitaliseSentence(type.getName())+"</div>"
 							+ "</div>");
@@ -6646,6 +6647,8 @@ public class CharacterModificationUtils {
 				}
 				contentSB.append("</div>"
 						+ "<div class='container-full-width' style='width:25%; margin:0;'>");
+
+//				background-color:"+Main.game.getPlayer().getCovering(Main.game.getPlayer().getTorsoCovering()).getPrimaryColour().toWebHexString()+";
 				
 				contentSB.append("<div class='modifier-icon' style='float:left; width:100%; margin:0; text-align:center;'>"
 									+ "<div class='modifier-icon-content'>"+tattoo.getSVGImage(BodyChanging.getTarget())+"</div>"

@@ -56,13 +56,13 @@ import com.lilithsthrone.utils.comparators.ClothingZLayerComparator;
 
 /**
  * @since 0.1.0
- * @version 0.3.9.5
+ * @version 0.4.10.10
  * @author Innoxia
  */
 public class InventoryDialogue {
 	
-	private static final int IDENTIFICATION_PRICE = 400;
-	private static final int IDENTIFICATION_ESSENCE_PRICE = 3;
+	private static final int IDENTIFICATION_PRICE = 1000;
+	private static final int IDENTIFICATION_ESSENCE_PRICE = 15;
 	
 	private static AbstractItem item;
 	private static AbstractClothing clothing;
@@ -259,6 +259,13 @@ public class InventoryDialogue {
 		public Response getResponse(int responseTab, int index) {
 			if (index == 0) {
 				return getCloseInventoryResponse();
+			}
+			
+			if(Main.game.isBadEnd()) {
+				if(index==1) {
+					return new Response("Unavailable", "You can't manipulate your inventory during a bad end...", null);
+				}
+				return null;
 			}
 			
 			if(responseTab==1) {
@@ -805,7 +812,7 @@ public class InventoryDialogue {
 						if(Main.sex.getInitialSexManager().isHidden(Main.game.getPlayer())) {
 							return new Response(UtilText.parse(inventoryNPC, "Displace all ([npc.HerHim])"), UtilText.parse(inventoryNPC, "As you're hiding, you can't displace [npc.namePos] clothing!"), null);
 							
-						} else if(!Main.sex.getSexManager().isAbleToRemoveOthersClothing(Main.game.getPlayer(), null)) {
+						} else if(!Main.sex.isCanRemoveOthersClothing(Main.game.getPlayer(), null)) {
 							return new Response(UtilText.parse(inventoryNPC, "Displace all ([npc.HerHim])"), UtilText.parse(inventoryNPC, "You can't displace [npc.namePos] clothing in this sex scene!"), null);
 
 						} else if(inventoryNPC.getClothingCurrentlyEquipped().isEmpty()) {
@@ -841,7 +848,7 @@ public class InventoryDialogue {
 						if(Main.sex.getInitialSexManager().isHidden(Main.game.getPlayer())) {
 							return new Response(UtilText.parse(inventoryNPC, "Unequip all ([npc.HerHim])"), UtilText.parse(inventoryNPC, "As you're hiding, you can't unequip [npc.namePos] clothing!"), null);
 							
-						} else if(!Main.sex.getSexManager().isAbleToRemoveOthersClothing(Main.game.getPlayer(), null)) {
+						} else if(!Main.sex.isCanRemoveOthersClothing(Main.game.getPlayer(), null)) {
 							return new Response(UtilText.parse(inventoryNPC, "Unequip all ([npc.HerHim])"), UtilText.parse(inventoryNPC, "You can't unequip [npc.namePos] clothing in this sex scene!"), null);
 
 						} else if(inventoryNPC.getClothingCurrentlyEquipped().isEmpty()) {
@@ -1005,6 +1012,14 @@ public class InventoryDialogue {
 			if (index == 0) {
 				return getCloseInventoryResponse();
 			}
+
+			if(Main.game.isBadEnd()) {
+				if(index==1) {
+					return new Response("Unavailable", "You can't manipulate your inventory during a bad end...", null);
+				}
+				return null;
+			}
+			
 			if(responseTab==0) {
 				return INVENTORY_MENU.getResponse(responseTab, index);
 			}
@@ -2711,6 +2726,14 @@ public class InventoryDialogue {
 			if (index == 0) {
 				return getCloseInventoryResponse();
 			}
+
+			if(Main.game.isBadEnd()) {
+				if(index==1) {
+					return new Response("Unavailable", "You can't manipulate your inventory during a bad end...", null);
+				}
+				return null;
+			}
+			
 			if(responseTab==0) {
 				return INVENTORY_MENU.getResponse(responseTab, index);
 			}
@@ -3901,6 +3924,14 @@ public class InventoryDialogue {
 			if (index == 0) {
 				return getCloseInventoryResponse();
 			}
+
+			if(Main.game.isBadEnd()) {
+				if(index==1) {
+					return new Response("Unavailable", "You can't manipulate your inventory during a bad end...", null);
+				}
+				return null;
+			}
+			
 			if(responseTab==0) {
 				return INVENTORY_MENU.getResponse(responseTab, index);
 			}
@@ -4800,6 +4831,7 @@ public class InventoryDialogue {
 										resetClothingDyeColours();
 									}
 								};
+								
 							} else if(index >= 6 && index <= 9 && index-6<clothing.getClothingType().getEquipSlots().size()) {
 								InventorySlot slot = clothing.getClothingType().getEquipSlots().get(index-6);
 								if(clothing.isCanBeEquipped(Main.game.getPlayer(), slot)) {
@@ -4837,6 +4869,9 @@ public class InventoryDialogue {
 									return new Response("Repair (<i>1 Essence</i>)", "You can't repair condoms on the ground!", null);
 								}
 								return new Response("Sabotage", "You can't sabotage condoms on the ground!", null);
+							}
+							if(!clothing.isEnchantmentKnown()) {
+								return new Response("Identify", "You can't identify clothing during sex!", null);
 							}
 							return new Response("Enchant", "You can't enchant clothing on the ground!", null);
 
@@ -4947,8 +4982,42 @@ public class InventoryDialogue {
 								}
 								return new Response("Sabotage", "You can't sabotage condoms on the ground!", null);
 							}
+							if(!clothing.isEnchantmentKnown()) {
+								if(Main.game.getPlayer().getEssenceCount() >= IDENTIFICATION_ESSENCE_PRICE) {
+									return new Response("Identify ([style.italicsArcane("+IDENTIFICATION_ESSENCE_PRICE+" Essences)])",
+											"To identify the "+clothing.getName()+", you can either spend "+IDENTIFICATION_ESSENCE_PRICE+" arcane essences to do it yourself,"
+													+ " or go to a vendor and pay "+IDENTIFICATION_PRICE+" flames to have them do it for you.",
+											CLOTHING_INVENTORY) {
+										@Override
+										public void effects() {
+											Main.game.getPlayer().incrementEssenceCount(-IDENTIFICATION_ESSENCE_PRICE, false);
+											
+											Main.game.getPlayerCell().getInventory().removeClothing(clothing);
+											String enchantmentRemovedString = clothing.setEnchantmentKnown(owner, true);
+											Main.game.getPlayerCell().getInventory().addClothing(clothing);
+											
+//											clothing = AbstractClothing.enchantmentRemovedClothing;
+											
+											Main.game.getTextEndStringBuilder().append(
+													"<p>"
+														+ "You channel the power of "+Util.intToString(IDENTIFICATION_ESSENCE_PRICE)+" of your arcane essences into the "+clothing.getName()
+															+", and as it emits a faint purple glow, you find yourself able to detect what sort of enchantment it has!"
+													+ "</p>"
+													+ enchantmentRemovedString
+													+ "<p style='text-align:center;'>"
+														+ "Identifying the "+clothing.getName()+" has cost you [style.boldBad("+Util.intToString(IDENTIFICATION_ESSENCE_PRICE)+")] [style.boldArcane(Arcane Essences)]!"
+													+ "</p>");
+											RenderingEngine.setPage(Main.game.getPlayer(), clothing);
+										}
+									};
+								} else {
+									return new Response("Identify (<i>"+IDENTIFICATION_ESSENCE_PRICE+" Essences</i>)",
+											"To identify the "+clothing.getName()+", you can either spend "+IDENTIFICATION_ESSENCE_PRICE+" arcane essences to do it yourself ([style.italicsBad(which you don't have)]),"
+													+ " or go to a vendor and pay "+IDENTIFICATION_PRICE+" flames to have them do it for you.", null);
+								}
+							}
 							return new Response("Enchant", "You can't enchant clothing on the ground!", null);
-	
+							
 						} else if(index >= 6 && index <= 9 && index-6<clothing.getClothingType().getEquipSlots().size()) {
 							InventorySlot slot = clothing.getClothingType().getEquipSlots().get(index-6);
 							if(clothing.isCanBeEquipped(Main.game.getPlayer(), slot)) {
@@ -5450,6 +5519,14 @@ public class InventoryDialogue {
 			if (index == 0) {
 				return getCloseInventoryResponse();
 			}
+
+			if(Main.game.isBadEnd()) {
+				if(index==1) {
+					return new Response("Unavailable", "You can't manipulate your inventory during a bad end...", null);
+				}
+				return null;
+			}
+			
 			if(responseTab==0) {
 				return INVENTORY_MENU.getResponse(responseTab, index);
 			}
@@ -5875,6 +5952,14 @@ public class InventoryDialogue {
 			if (index == 0) {
 				return getCloseInventoryResponse();
 			}
+
+			if(Main.game.isBadEnd()) {
+				if(index==1) {
+					return new Response("Unavailable", "You can't manipulate your inventory during a bad end...", null);
+				}
+				return null;
+			}
+			
 			if(responseTab==0) {
 				return INVENTORY_MENU.getResponse(responseTab, index);
 			}
@@ -6105,8 +6190,14 @@ public class InventoryDialogue {
 						
 					case SEX:
 						if (index == 1) {
-							if(clothing.isDiscardedOnUnequip(slotEquippedTo) && !Main.sex.getSexManager().isAbleToRemoveSelfClothing(Main.game.getPlayer())) {
-								return new Response("Discard", "You can't unequip the " + clothing.getName() + " in this sex scene!", null);
+							if(!Main.sex.isCanRemoveSelfClothing(Main.game.getPlayer())) {
+								String unequipTitle = "Drop";
+								if(clothing.isDiscardedOnUnequip(slotEquippedTo)) {
+									unequipTitle = "Discard";
+								} else if(!Main.game.getPlayer().getLocationPlace().isItemsDisappear()) {
+									unequipTitle = "Store";
+								}
+								return new Response(unequipTitle, "You can't unequip the " + clothing.getName() + " in this sex scene!", null);
 							}
 							boolean areaFull = Main.game.isPlayerTileFull() && !Main.game.getPlayerCell().getInventory().hasClothing(clothing);
 							if(Main.game.getPlayer().getLocationPlace().isItemsDisappear()) {
@@ -6188,7 +6279,7 @@ public class InventoryDialogue {
 							}
 							
 						} else if(index == 6 && !clothing.isDiscardedOnUnequip(slotEquippedTo)) {
-							if(!Main.sex.getSexManager().isAbleToRemoveSelfClothing(Main.game.getPlayer())) {
+							if(!Main.sex.isCanRemoveSelfClothing(Main.game.getPlayer())) {
 								return new Response("Unequip", "You can't unequip the " + clothing.getName() + " in this sex scene!", null);
 							}
 							
@@ -6219,7 +6310,7 @@ public class InventoryDialogue {
 												+ clothing.getBlockedPartsKeysAsListWithoutNONE(owner, clothing.getSlotEquippedTo()).get(index -11).getDescriptionPast() + "!", null);
 								
 							} else {
-								if(!Main.sex.getSexManager().isAbleToRemoveSelfClothing(Main.game.getPlayer())) {
+								if(!Main.sex.isCanRemoveSelfClothing(Main.game.getPlayer())) {
 									return new Response(Util.capitaliseSentence(clothing.getBlockedPartsKeysAsListWithoutNONE(owner, clothing.getSlotEquippedTo()).get(index - 11).getDescription()),
 											"You can't "+clothing.getBlockedPartsKeysAsListWithoutNONE(owner, clothing.getSlotEquippedTo()).get(index -11).getDescription()
 											+ " "+(owner.isPlayer()?"your":owner.getName("")+"'s")+" " + clothing.getName() + " in this sex scene!", null);
@@ -6466,16 +6557,24 @@ public class InventoryDialogue {
 										UtilText.parse(inventoryNPC, "As you're hiding, you can't unequip [npc.namePos] clothing!"),
 										null);
 								
-							} else if(clothing.isDiscardedOnUnequip(slotEquippedTo) && !Main.sex.getSexManager().isAbleToRemoveOthersClothing(Main.game.getPlayer(), clothing)) {
+							} else if(clothing.isDiscardedOnUnequip(slotEquippedTo) && !Main.sex.isCanRemoveOthersClothing(Main.game.getPlayer(), clothing)) {
 								return new Response("Discard", "You can't unequip the " + clothing.getName() + " in this sex scene!", null);
 							}
+
+							if(!Main.sex.isCanRemoveOthersClothing(Main.game.getPlayer(), clothing)) {
+								String unequipTitle = "Drop";
+								if(clothing.isDiscardedOnUnequip(slotEquippedTo)) {
+									unequipTitle = "Discard";
+								} else if(!Main.game.getPlayer().getLocationPlace().isItemsDisappear()) {
+									unequipTitle = "Store";
+								}
+								return new Response(unequipTitle, "You can't unequip the " + clothing.getName() + " in this sex scene!", null);
+							}
+							
 							boolean areaFull = Main.game.isPlayerTileFull() && !Main.game.getPlayerCell().getInventory().hasClothing(clothing);
 							if(Main.game.getPlayer().getLocationPlace().isItemsDisappear()) {
 								if(!clothing.getClothingType().isAbleToBeDropped()) {
 									return new Response("Drop", "You cannot drop the " + clothing.getName() + "!", null);
-									
-								} else if(!Main.sex.getSexManager().isAbleToRemoveOthersClothing(Main.game.getPlayer(), clothing)) {
-									return new Response("Drop", UtilText.parse(inventoryNPC, "You can't unequip the " + clothing.getName() + " in this sex scene!"), null);
 									
 								} else if(areaFull && !clothing.isDiscardedOnUnequip(slotEquippedTo)) {
 									return new Response("Drop", UtilText.parse(inventoryNPC, "This area is full, so you can't drop [npc.namePos] " + clothing.getName() + " here!"), null);
@@ -6505,9 +6604,6 @@ public class InventoryDialogue {
 							} else {
 								if(!clothing.getClothingType().isAbleToBeDropped()) {
 									return new Response("Store", "You cannot drop the " + clothing.getName() + "!", null);
-									
-								} else if(!Main.sex.getSexManager().isAbleToRemoveOthersClothing(Main.game.getPlayer(), clothing)) {
-									return new Response("Store", UtilText.parse(inventoryNPC, "You can't unequip the " + clothing.getName() + " in this sex scene!"), null);
 									
 								} else if(areaFull && !clothing.isDiscardedOnUnequip(slotEquippedTo)) {
 									return new Response("Store", UtilText.parse(inventoryNPC, "This area is full, so you can't store [npc.namePos] " + clothing.getName() + " here!"), null);
@@ -6555,7 +6651,7 @@ public class InventoryDialogue {
 							if(Main.sex.getInitialSexManager().isHidden(Main.game.getPlayer())) {
 								return new Response("Unequip", UtilText.parse(inventoryNPC, "As you're hiding, you can't unequip [npc.namePos] clothing!"), null);
 								
-							} else if(!Main.sex.getSexManager().isAbleToRemoveOthersClothing(Main.game.getPlayer(), clothing)) {
+							} else if(!Main.sex.isCanRemoveOthersClothing(Main.game.getPlayer(), clothing)) {
 								return new Response("Unequip", "You can't unequip the " + clothing.getName() + " in this sex scene!", null);
 							}
 							
@@ -6593,7 +6689,7 @@ public class InventoryDialogue {
 											null);
 								}
 								if(owner.isAbleToBeDisplaced(clothing, clothing.getBlockedPartsKeysAsListWithoutNONE(inventoryNPC, clothing.getSlotEquippedTo()).get(index -11), false, false, Main.game.getPlayer())){
-									if(!Main.sex.getSexManager().isAbleToRemoveOthersClothing(Main.game.getPlayer(), clothing)) {
+									if(!Main.sex.isCanRemoveOthersClothing(Main.game.getPlayer(), clothing)) {
 										return new Response(Util.capitaliseSentence(clothing.getBlockedPartsKeysAsListWithoutNONE(inventoryNPC, clothing.getSlotEquippedTo()).get(index - 11).getDescription()),
 												"You can't "+clothing.getBlockedPartsKeysAsListWithoutNONE(inventoryNPC, clothing.getSlotEquippedTo()).get(index -11).getDescription() + " the " + clothing.getName() + " in this sex scene!", null);
 									}
@@ -8726,7 +8822,10 @@ public class InventoryDialogue {
 			
 		} else {
 			return new Response("Unseal (<i>"+removalCost+" Essences</i>)",
-					"You need at least "+removalCost+" arcane essences in order to unseal this piece of clothing!",
+					"You need at least "+removalCost+" arcane essences in order to unseal this piece of clothing!"
+							+ (Main.game.getPlayer().hasFetish(Fetish.FETISH_BONDAGE_VICTIM)
+									?"<br/>[style.italicsMinorBad(This cost is)] [style.italicsBad(5 times)] [style.italicsMinorBad(more than normal due to your '"+Fetish.FETISH_BONDAGE_VICTIM.getName(Main.game.getPlayer())+"' fetish!)]"
+									:""),
 					null);
 		}
 	}

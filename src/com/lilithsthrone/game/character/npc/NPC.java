@@ -2040,27 +2040,29 @@ public abstract class NPC extends GameCharacter implements XMLSaving {
 					"Your breasts need to be a little bigger!"));
 				//if(possibleEffects.size()>=numberOfTransformations) { return new TransformativePotion(itemType, possibleEffects, body); }
 				
-		} else if(target.getBreastSize().getMeasurement() > body.getBreast().getSize().getMeasurement() && !hasFetish(Fetish.FETISH_BREASTS_OTHERS)) {
+		} else if(target.getBreastSize().getMeasurement() >= body.getBreast().getSize().getMeasurement() - 3) {
+			possibleEffects.add(new PossibleItemEffect(
+					new ItemEffect(itemType.getEnchantmentEffect(), TFModifier.TF_BREASTS, TFModifier.TF_MOD_SIZE, TFPotency.MAJOR_DRAIN, 1),
+					"Your breasts are far too big!"));
+				if(possibleEffects.size()>=numberOfTransformations) { return new TransformativePotion(itemType, possibleEffects, body); }
+				
+		} else if(target.getBreastSize().getMeasurement() >= body.getBreast().getSize().getMeasurement() - 2) {
 			possibleEffects.add(new PossibleItemEffect(
 					new ItemEffect(itemType.getEnchantmentEffect(), TFModifier.TF_BREASTS, TFModifier.TF_MOD_SIZE, TFPotency.DRAIN, 1),
 					"Your breasts are too big!"));
-				//if(possibleEffects.size()>=numberOfTransformations) { return new TransformativePotion(itemType, possibleEffects, body); }
-		}
-
-		if(target.getBreastRows() < body.getBreast().getRows() && target.getBreastRows() < Breast.MAXIMUM_BREAST_ROWS) {
+				if(possibleEffects.size()>=numberOfTransformations) { return new TransformativePotion(itemType, possibleEffects, body); }
+				
+		} else if(target.getBreastSize().getMeasurement() >= body.getBreast().getSize().getMeasurement() - 1) {
 			possibleEffects.add(new PossibleItemEffect(
-				new ItemEffect(itemType.getEnchantmentEffect(), TFModifier.TF_BREASTS, TFModifier.TF_MOD_COUNT, TFPotency.MINOR_BOOST, 1),
-				"The more, the merrier!"));
-		} else if(target.getBreastRows() > body.getBreast().getRows() && target.getBreastRows() > 1 && !hasFetish(Fetish.FETISH_BREASTS_OTHERS)) {
-			possibleEffects.add(new PossibleItemEffect(
-				new ItemEffect(itemType.getEnchantmentEffect(), TFModifier.TF_BREASTS, TFModifier.TF_MOD_COUNT, TFPotency.MINOR_DRAIN, 1),
-				"Ack! Too many titties!"));
+					new ItemEffect(itemType.getEnchantmentEffect(), TFModifier.TF_BREASTS, TFModifier.TF_MOD_SIZE, TFPotency.MINOR_DRAIN, 1),
+					"Your breasts are a little too big!"));
+				if(possibleEffects.size()>=numberOfTransformations) { return new TransformativePotion(itemType, possibleEffects, body); }
 		}
 
 		
 		//--- CROTCH-BOOBS---//
 		
-		if(applyingCrotchBoobTF && target.hasBreastsCrotch() && body.hasBreastsCrotch()) {
+		if(applyingCrotchBoobTF && body.getBreastCrotch().getType()!=BreastType.NONE) {
 			if(target.getBreastCrotchSize().getMeasurement() + 3 <= body.getBreastCrotch().getSize().getMeasurement()) {
 				possibleEffects.add(new PossibleItemEffect(
 						new ItemEffect(itemType.getEnchantmentEffect(), TFModifier.TF_BREASTS_CROTCH, TFModifier.TF_MOD_SIZE, TFPotency.MAJOR_BOOST, 1),
@@ -2079,11 +2081,23 @@ public abstract class NPC extends GameCharacter implements XMLSaving {
 						"Your crotch-boobs need to be a little bigger!"));
 					//if(possibleEffects.size()>=numberOfTransformations) { return new TransformativePotion(itemType, possibleEffects, body); }
 					
-			} else if(target.getBreastCrotchSize().getMeasurement() > body.getBreastCrotch().getSize().getMeasurement() && !hasFetish(Fetish.FETISH_BREASTS_OTHERS)) {
+			} else if(target.getBreastCrotchSize().getMeasurement() >= body.getBreastCrotch().getSize().getMeasurement() - 3) {
+				possibleEffects.add(new PossibleItemEffect(
+						new ItemEffect(itemType.getEnchantmentEffect(), TFModifier.TF_BREASTS_CROTCH, TFModifier.TF_MOD_SIZE, TFPotency.MAJOR_DRAIN, 1),
+						"Your crotch-boobs are far too big!"));
+					if(possibleEffects.size()>=numberOfTransformations) { return new TransformativePotion(itemType, possibleEffects, body); }
+					
+			} else if(target.getBreastCrotchSize().getMeasurement() >= body.getBreastCrotch().getSize().getMeasurement() - 2) {
 				possibleEffects.add(new PossibleItemEffect(
 						new ItemEffect(itemType.getEnchantmentEffect(), TFModifier.TF_BREASTS_CROTCH, TFModifier.TF_MOD_SIZE, TFPotency.DRAIN, 1),
 						"Your crotch-boobs are too big!"));
 					//if(possibleEffects.size()>=numberOfTransformations) { return new TransformativePotion(itemType, possibleEffects, body); }
+					
+			} else if(target.getBreastCrotchSize().getMeasurement() >= body.getBreastCrotch().getSize().getMeasurement() - 1) {
+				possibleEffects.add(new PossibleItemEffect(
+						new ItemEffect(itemType.getEnchantmentEffect(), TFModifier.TF_BREASTS_CROTCH, TFModifier.TF_MOD_SIZE, TFPotency.MINOR_DRAIN, 1),
+						"Your crotch-boobs are a little too big!"));
+					if(possibleEffects.size()>=numberOfTransformations) { return new TransformativePotion(itemType, possibleEffects, body); }
 			}
 
 			if(target.getBreastCrotchRows() < body.getBreastCrotch().getRows() && target.getBreastCrotchRows() < BreastCrotch.MAXIMUM_BREAST_ROWS) {
@@ -2192,7 +2206,7 @@ public abstract class NPC extends GameCharacter implements XMLSaving {
 		
 		//--- PENIS ---//
 		
-		if(target.getPenisType() != PenisType.NONE && body.getPenis().getType() != PenisType.NONE) {
+		if(target.getPenisType()!=PenisType.NONE && body.getPenis().getType()!=PenisType.NONE) {
 			// Cum production:
 			if(target.getPenisRawCumStorageValue() < body.getPenis().getTesticle().getRawCumStorageValue()) {
 				possibleEffects.add(new PossibleItemEffect(
@@ -2257,7 +2271,7 @@ public abstract class NPC extends GameCharacter implements XMLSaving {
 		
 		//--- VAGINA ---//
 		
-		if(target.getVaginaType() != VaginaType.NONE && body.getVagina().getType() != VaginaType.NONE) {
+		if(target.getVaginaType()!=VaginaType.NONE && body.getVagina().getType()!=VaginaType.NONE) {
 			// Capacity:
 			if(target.getVaginaRawCapacityValue()+10 < body.getVagina().getOrificeVagina().getRawCapacityValue()) {
 				possibleEffects.add(new PossibleItemEffect(
@@ -2650,18 +2664,32 @@ public abstract class NPC extends GameCharacter implements XMLSaving {
 	
 	public FetishPotion generateFetishPotion(GameCharacter target, Boolean pairedFetishesOnly) {
 		ItemEffect selectedEffect = null; // this will be the ultimately selected effect, or null if none available
-		String selectedEffectString ; // this will be a flavor text string paired with the effect
+		String selectedEffectString; // this will be a flavour text string paired with the effect
 		
 		List<PossibleItemEffect> possibleEffects = new ArrayList<>();
 		
 		AbstractItemType itemType = ItemType.FETISH_UNREFINED;
 		
-		AbstractFetish currentTopFetish = null, currentBottomFetish = null;
-		TFModifier currentTopModifier = null, currentBottomModifier = null;
-		TFPotency currentTopPotency = null, currentBottomPotency = null, currentTopRemovePotency = null, currentBottomRemovePotency = null;;
+		AbstractFetish currentTopFetish = null;
+		AbstractFetish currentBottomFetish = null;
 		
-		int baseTopChance = 5, baseBottomChance = 5,  baseTopRemoveChance = 0, baseBottomRemoveChance = 0; 
-		int currentTopChance = 0, currentBottomChance = 0, currentTopRemoveChance = 0, currentBottomRemoveChance = 0;
+		TFModifier currentTopModifier = null;
+		TFModifier currentBottomModifier = null;
+		
+		TFPotency currentTopPotency = null;
+		TFPotency currentBottomPotency = null;
+		TFPotency currentTopRemovePotency = null;
+		TFPotency currentBottomRemovePotency = null;
+		
+		int baseTopChance = 5;
+		int baseBottomChance = 5;
+		int baseTopRemoveChance = 0;
+		int baseBottomRemoveChance = 0; 
+		
+		int currentTopChance = 0;
+		int currentBottomChance = 0;
+		int currentTopRemoveChance = 0;
+		int currentBottomRemoveChance = 0;
 		
 		int pairedFetishMultiplier = 5;  
 		int matchedFetishDecrement = 8;  // heavy tendency can still allow small chance giving a matched fetish, otherwise no chance at all
@@ -2706,14 +2734,18 @@ public abstract class NPC extends GameCharacter implements XMLSaving {
 		for(AbstractFetish fetish : Fetish.getAllFetishes()) {
 			// Skip bottom & solo fetishes, as well as the TF & Kink giving fetishes
 			// NPCs will otherwise always end up forcing them on the player
-			if (!fetish.isTopFetish() || fetish.equals(Fetish.FETISH_TRANSFORMATION_GIVING) || fetish.equals(Fetish.FETISH_KINK_GIVING)) {
+			// v0.4.10.8: Changed "!fetish.isTopFetish()" to "fetish.getOpposite()==null" to allow for more fetish applications (I think, in practice it seems to make no difference...)
+			if(fetish.getOpposite()==null
+					|| !fetish.getFetishesForAutomaticUnlock().isEmpty()
+					|| fetish.equals(Fetish.FETISH_TRANSFORMATION_GIVING)
+					|| fetish.equals(Fetish.FETISH_KINK_GIVING)) {
 				continue;
 			}
 			currentTopFetish = fetish;
 			currentBottomFetish = fetish.getOpposite();
 			
-			currentTopModifier = TFModifier.valueOf( "TF_MOD_" + Fetish.getIdFromFetish(currentTopFetish));
-			currentBottomModifier = TFModifier.valueOf( "TF_MOD_" + Fetish.getIdFromFetish(currentBottomFetish));
+			currentTopModifier = TFModifier.valueOf("TF_MOD_" + Fetish.getIdFromFetish(currentTopFetish));
+			currentBottomModifier = TFModifier.valueOf("TF_MOD_" + Fetish.getIdFromFetish(currentBottomFetish));
 			
 			currentTopPotency = TFPotency.MINOR_BOOST;
 			currentBottomPotency = TFPotency.MINOR_BOOST;
@@ -2805,6 +2837,7 @@ public abstract class NPC extends GameCharacter implements XMLSaving {
 				if(!pairedFetishesOnly) {
 					currentTopRemoveChance += matchedFetishRemoveIncrement;
 				}
+				
 			} else if(pairedFetishesOnly) {
 				currentBottomChance = 0;
 				// in paired only mode, we're only adding fetishes
@@ -2820,6 +2853,7 @@ public abstract class NPC extends GameCharacter implements XMLSaving {
 				if(!pairedFetishesOnly) {
 					currentBottomRemoveChance += matchedFetishRemoveIncrement;
 				}
+				
 			} else if(pairedFetishesOnly) {
 				currentTopChance = 0;
 				// in paired only mode, we're only adding fetishes
@@ -2880,11 +2914,11 @@ public abstract class NPC extends GameCharacter implements XMLSaving {
 			
 			if(currentTopChance > 0) {
 				possibleEffects.add(new PossibleItemEffect(
-					new ItemEffect(itemType.getEnchantmentEffect(), 
-						TFModifier.NONE, 
-						currentTopModifier, 
-						currentTopPotency, 
-						1), 
+					new ItemEffect(itemType.getEnchantmentEffect(),
+						currentTopFetish.getAssociatedTFModifier(),
+						currentTopModifier,
+						currentTopPotency,
+						1),
 						currentTopChance));
 			}
 			
@@ -2892,7 +2926,7 @@ public abstract class NPC extends GameCharacter implements XMLSaving {
 				possibleEffects.add(new PossibleItemEffect(
 					new ItemEffect(
 						itemType.getEnchantmentEffect(),
-						TFModifier.NONE,
+						currentTopFetish.getAssociatedTFModifier(),
 						currentTopModifier,
 						currentTopRemovePotency,
 						1),
@@ -2903,7 +2937,7 @@ public abstract class NPC extends GameCharacter implements XMLSaving {
 				possibleEffects.add(new PossibleItemEffect(
 					new ItemEffect(
 						itemType.getEnchantmentEffect(),
-						TFModifier.NONE,
+						currentBottomFetish.getAssociatedTFModifier(),
 						currentBottomModifier,
 						currentBottomPotency,
 						1),
@@ -2914,7 +2948,7 @@ public abstract class NPC extends GameCharacter implements XMLSaving {
 				possibleEffects.add(new PossibleItemEffect(
 					new ItemEffect(
 						itemType.getEnchantmentEffect(),
-						TFModifier.NONE,
+						currentBottomFetish.getAssociatedTFModifier(),
 						currentBottomModifier,
 						currentBottomRemovePotency,
 						1),
@@ -3033,7 +3067,7 @@ public abstract class NPC extends GameCharacter implements XMLSaving {
 				possibleEffects.add(new PossibleItemEffect(
 					new ItemEffect(
 						itemType.getEnchantmentEffect(),
-						TFModifier.NONE,
+						currentTopFetish.getAssociatedTFModifier(),
 						currentTopModifier,
 						currentTopPotency,
 						1),
@@ -3043,7 +3077,7 @@ public abstract class NPC extends GameCharacter implements XMLSaving {
 				possibleEffects.add(new PossibleItemEffect(
 					new ItemEffect(
 						itemType.getEnchantmentEffect(),
-						TFModifier.NONE,
+						currentTopFetish.getAssociatedTFModifier(),
 						currentTopModifier,
 						currentTopRemovePotency,
 						1),
@@ -3905,6 +3939,27 @@ public abstract class NPC extends GameCharacter implements XMLSaving {
 				} else {
 					sb.append(UtilText.parse(user, target, 
 							" Letting out a hesitant sigh, [npc2.she] nevertheless [npc2.verb(take)] the pill out of [npc.namePos] [npc.hand], before quickly popping it out of its wrapper and swallowing it down."));
+				}
+				
+				sb.append("</p>");
+				
+				sb.append(itemOwner.useItem(item, target, false, true));
+				
+				return sb.toString();
+					
+			} else if(item.getItemType().equals(ItemType.getItemTypeFromId("innoxia_pills_lubrication"))) {
+				sb.append(UtilText.parse(user, target,
+						"<p>"
+							+ "Holding out a '[#ITEM_innoxia_pills_lubrication.getName(false)]' to [npc2.name], [npc.name] [npc.verb(tell)] [npc2.herHim] to swallow it in order to get [npc2.herHim] lubed up."));
+				
+				if(isObedientSlave) {
+					sb.append(UtilText.parse(user, target, 
+							" Obediently doing what's asked of [npc2.herHim], [npc2.she] happily [npc2.verb(take)] the pill out of [npc.namePos] [npc.hand], and quickly [npc2.verb(pop)] it out of its wrapping before swallowing it down."));
+					
+				} else {
+					sb.append(UtilText.parse(user, target, 
+							" Seeing little harm in swallowing the [#ITEM_innoxia_pills_lubrication.getName(false)], [npc2.she] [npc2.verb(take)] it out of [npc.namePos] [npc.hand],"
+									+ " before quickly popping it out of its wrapper and swallowing it down."));
 				}
 				
 				sb.append("</p>");
