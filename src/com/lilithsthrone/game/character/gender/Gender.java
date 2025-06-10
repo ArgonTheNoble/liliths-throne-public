@@ -160,7 +160,7 @@ public enum Gender {
 	public ContentPreferenceValue getGenderPreferenceDefault() {
 		return genderPreferenceDefault;
 	}
-	
+
 	/**
 	 * @return Either a futanari, a shemale, a female, or a male, based on whether a vagina or penis are required. <b>Does not use the player's gender preferences.</b>
 	 */
@@ -198,6 +198,7 @@ public enum Gender {
 				return Gender.F_V_B_FEMALE;
 		}
 	}
+
 	public static Gender getGenderFromUserPreferences(SexualOrientation orientation) {
 		ForcedTFTendency tend = Main.getProperties().getForcedTFTendency();
 
