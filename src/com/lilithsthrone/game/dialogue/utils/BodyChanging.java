@@ -244,6 +244,20 @@ public class BodyChanging {
 
 	private static final List<AbstractRace> allRaces = new ArrayList<>(Race.getAllRaces());
 
+	private static List<AbstractRace> getTransformableRaces() {
+		List<AbstractRace> raceOptions = Util.newArrayListOfValues();
+		GameCharacter target = BodyChanging.getTarget();
+		raceOptions.add(target.getTrueRace());
+		for(AbstractSubspecies subspecies : Subspecies.getAllSubspecies()) {
+			if(subspecies.getSubspeciesOverridePriority() <= 0
+				&& !raceOptions.contains(subspecies.getRace())) {
+				raceOptions.add(subspecies.getRace());
+			}
+ 		}
+		raceOptions.add(Race.NONE);
+		return raceOptions;
+	}
+
 	private static List<AbstractRace> getFaceSkinDemonRaces() {
 		List<AbstractRace> faceSkinOptions = Util.newArrayListOfValues();
 		GameCharacter target = BodyChanging.getTarget();
@@ -259,6 +273,8 @@ public class BodyChanging {
 			faceSkinOptions.add(target.getRace());
 			if (target.isYouko()){
 				faceSkinOptions.addAll(target.getSelfTransformationRaces());
+			} else {
+				return getTransformableRaces();
 			}
 
 		} else {
@@ -281,6 +297,8 @@ public class BodyChanging {
 			armLegOptions.add(target.getRace());
 			if (target.isYouko()) {
 				armLegOptions.addAll(target.getSelfTransformationRaces());
+			} else {
+				return getTransformableRaces();
 			}
 		} else {
 			armLegOptions.addAll(target.getSelfTransformationRaces());
@@ -310,6 +328,8 @@ public class BodyChanging {
 			minorPartsOptions.add(target.getRace());
 			if (target.isYouko()) {
 				minorPartsOptions.addAll(target.getSelfTransformationRaces());
+			} else {
+				return getTransformableRaces();
 			}
 		} else {
 			minorPartsOptions.addAll(target.getSelfTransformationRaces());

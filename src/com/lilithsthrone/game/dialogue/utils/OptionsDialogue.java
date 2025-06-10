@@ -2483,6 +2483,11 @@ public class OptionsDialogue {
 					"Enchantment interruptions",
 					"When enabled, clothing enchantment effects will interrupt dialogue to let you know that they've happened.",
 					Main.getProperties().hasValue(PropertyValue.enchantmentInterruptions)));
+			UtilText.nodeContentSB.append(getContentPreferenceDiv("SEX_TRANSFORMATION",
+					PresetColour.GENERIC_ARCANE,
+					"Sex Transformations",
+					"When enabled, you can be transformed by having sex with an NPC.",
+					Main.getProperties().hasValue(PropertyValue.sexTransformations)));
 			UtilText.nodeContentSB.append(getContentPreferenceDiv("DIALOGUE_COPY",
 					PresetColour.BASE_BLUE_STEEL,
 					"Automatic text copying",

@@ -3784,6 +3784,11 @@ public abstract class GameCharacter implements XMLSaving {
 		}
 
 		infoScreenSB.append("</p>");
+
+		if(Main.game.getPlayer().hasTraitActivated(Perk.OBSERVANT) && !this.isPlayer()) {
+			String tfPref = ((NPC)this).getPreferredBodyDescription("b");
+			infoScreenSB.append("<p style='text-align:center;'><i>You suspect [npc.She] would be most interested in a " + tfPref + "</i></p>");
+		}
 		
 		infoScreenSB.append("<h6>Relationships</h6>"
 				+ "<p>");
@@ -4198,7 +4203,13 @@ public abstract class GameCharacter implements XMLSaving {
 	}
 
 	public void setBody(Body newBody, boolean additionalSetups) {
+		setBody(newBody, additionalSetups, false);
+	}
+
+	public void setBody(Body newBody, boolean additionalSetups, boolean keepVirginities) {
+		boolean[] v = body.getVirginityList();
 		body = newBody;
+		body.setVirginiesFromList(v);
 
 		if(additionalSetups) {
 			additionalBodySetup(body.getGender(), RacialBody.valueOfRace(body.getRace()), body.getSubspecies());
@@ -4998,9 +5009,9 @@ public abstract class GameCharacter implements XMLSaving {
 
 		// Rounding is to get rid of floating point ridiculousness (e.g. 2.3999999999999999999999):
 		if(this.getSlaveJob(hour)==SlaveJob.IDLE) {
-			return (Math.round(this.getHomeLocationPlace().getHourlyObedienceChange()*100)/100f);
+			return (Math.round(this.getHomeLocationPlace().getHourlyObedienceChange()*100*5)/100f);
 		}
-		return (Math.round(job.getObedienceGain(this)*100)/100f);
+		return (Math.round(job.getObedienceGain(this)*100*5)/100f);
 	}
 	
 	public float getDailyObedienceChange() {

@@ -42,7 +42,13 @@ public abstract class AbstractEncounter {
 	protected static AbstractCoreItem randomItem;
 	
 	protected static final double INCEST_ENCOUNTER_RATE = 0.2f;
-	protected static double IncestEncounterRate() { return INCEST_ENCOUNTER_RATE; }
+	//protected static double IncestEncounterRate() { return INCEST_ENCOUNTER_RATE; }
+	protected static double IncestEncounterRate() {
+		if(Main.game.isStarted()) {
+			return 1.0f - Math.pow(0.95f, Main.game.getOffspringNotSpawned(os -> true).size());
+		}
+		return 0.2f;
+	}
 	
 	protected static Map<String, List<AbstractEncounter>> additionalPlaceTypeEncounters = new HashMap<>();
 	

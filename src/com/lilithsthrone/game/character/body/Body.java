@@ -3748,6 +3748,32 @@ public class Body implements XMLSaving {
 		return this.getRace()==Race.DOLL;
 	}
 
+	public boolean[] getVirginityList() {
+		boolean[] virginities = {
+			getFace().getMouth().getOrificeMouth().isVirgin(), 
+			getBreast().getNipples().getOrificeNipples().isVirgin(),
+			getBreastCrotch().getNipples().getOrificeNipples().isVirgin(),
+			getPenis().isVirgin(),
+			getVagina().getOrificeVagina().isVirgin(),
+			getAss().getAnus().getOrificeAnus().isVirgin(),
+			getSpinneret().isVirgin(),
+			getPenis().getOrificeUrethra().isVirgin(),
+			getVagina().getOrificeUrethra().isVirgin() };
+		return virginities;
+	}
+
+	public void setVirginiesFromList(boolean[] v) {
+		getFace().getMouth().getOrificeMouth().setVirgin(v[0]);
+		getBreast().getNipples().getOrificeNipples().setVirgin(v[1]);
+		getBreastCrotch().getNipples().getOrificeNipples().setVirgin(v[2]);
+		getPenis().setVirgin(v[3]);
+		getVagina().getOrificeVagina().setVirgin(v[4]);
+		getAss().getAnus().getOrificeAnus().setVirgin(v[5]);
+		getSpinneret().setVirgin(v[6]);
+		getPenis().getOrificeUrethra().setVirgin(v[7]);
+		getVagina().getOrificeUrethra().setVirgin(v[8]);
+	}
+
 	public Antenna getAntenna() {
 		return antenna;
 	}

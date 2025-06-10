@@ -24,9 +24,11 @@ import com.lilithsthrone.game.character.body.valueEnums.BreastShape;
 import com.lilithsthrone.game.character.body.valueEnums.Capacity;
 import com.lilithsthrone.game.character.body.valueEnums.CupSize;
 import com.lilithsthrone.game.character.body.valueEnums.Femininity;
+import com.lilithsthrone.game.character.body.valueEnums.FluidRegeneration;
 import com.lilithsthrone.game.character.body.valueEnums.HairLength;
 import com.lilithsthrone.game.character.body.valueEnums.HairStyle;
 import com.lilithsthrone.game.character.body.valueEnums.HipSize;
+import com.lilithsthrone.game.character.body.valueEnums.Lactation;
 import com.lilithsthrone.game.character.body.valueEnums.LipSize;
 import com.lilithsthrone.game.character.body.valueEnums.Muscle;
 import com.lilithsthrone.game.character.body.valueEnums.NippleSize;
@@ -49,6 +51,7 @@ import com.lilithsthrone.game.character.persona.PersonalityTrait;
 import com.lilithsthrone.game.character.persona.SexualOrientation;
 import com.lilithsthrone.game.character.quests.Quest;
 import com.lilithsthrone.game.character.quests.QuestLine;
+import com.lilithsthrone.game.character.race.FurryPreference;
 import com.lilithsthrone.game.character.race.RaceStage;
 import com.lilithsthrone.game.character.race.Subspecies;
 import com.lilithsthrone.game.combat.DamageType;
@@ -490,21 +493,48 @@ public class Brax extends NPC {
 		
 		List<PossibleItemEffect> minimumEffects = new ArrayList<>();
 		List<PossibleItemEffect> reducedEffects = new ArrayList<>();
+		List<PossibleItemEffect> normalEffects = new ArrayList<>();
 		List<PossibleItemEffect> maximumEffects = new ArrayList<>();
 		
-		switch(Main.getProperties().getForcedTFPreference()) {
+		FurryPreference effectTier = FurryPreference.MAXIMUM;
+		FurryPreference furryPref = Main.getProperties().getForcedTFPreference();
+		int timesTransformedPlayer = Main.game.getDialogueFlags().getTimesTransformedByBrax();
+		if(Main.game.isBraxMainQuestComplete())
+			timesTransformedPlayer = 5;
+		if(furryPref == FurryPreference.NORMAL || timesTransformedPlayer < 4)
+			effectTier = FurryPreference.NORMAL;
+		if(furryPref == FurryPreference.REDUCED || timesTransformedPlayer < 3)
+			effectTier = FurryPreference.REDUCED;
+		if(furryPref == FurryPreference.MINIMUM || timesTransformedPlayer < 2)
+			effectTier = FurryPreference.MINIMUM;
+		if(furryPref == FurryPreference.HUMAN || timesTransformedPlayer < 1)
+			effectTier = FurryPreference.HUMAN;
+
+		switch(effectTier) {
 			case MAXIMUM:
-			case NORMAL:
-				maximumEffects.add(new PossibleItemEffect(new ItemEffect(itemType.getEnchantmentEffect(), TFModifier.TF_SKIN, TFModifier.TF_TYPE_1, TFPotency.MINOR_BOOST, 1), ""));
+				maximumEffects.add(new PossibleItemEffect(new ItemEffect(itemType.getEnchantmentEffect(), TFModifier.TF_EYES, TFModifier.TF_MOD_EYE_PUPIL_HEART, TFPotency.MINOR_BOOST, 1), ""));
+				for(int i=target.getBreastRawMilkStorageValue(); i<Lactation.FOUR_LARGE_AMOUNT.getMinimumValue(); i+=50) {
+					maximumEffects.add(new PossibleItemEffect(new ItemEffect(itemType.getEnchantmentEffect(), TFModifier.TF_BREASTS, TFModifier.TF_MOD_WETNESS, TFPotency.MAJOR_BOOST, 1), ""));
+				}
+				for(int i=target.getBreastRawLactationRegenerationValue(); i<FluidRegeneration.TWO_FAST.getMinimumRegenerationValuePerDay(); i+=100) {
+					maximumEffects.add(new PossibleItemEffect(new ItemEffect(itemType.getEnchantmentEffect(), TFModifier.TF_BREASTS, TFModifier.TF_MOD_WETNESS, TFPotency.BOOST, 1), ""));
+				}
 				if(Main.getProperties().multiBreasts>0) {
-					if(target.getBreastRows()<3) {
-						maximumEffects.add(new PossibleItemEffect(new ItemEffect(itemType.getEnchantmentEffect(), TFModifier.TF_BREASTS, TFModifier.TF_MOD_COUNT, TFPotency.MINOR_BOOST, 1), ""));
-					}
-					if(target.getBreastRows()<2) {
+					for(int i=target.getBreastRows(); i<6; i+=1) {
 						maximumEffects.add(new PossibleItemEffect(new ItemEffect(itemType.getEnchantmentEffect(), TFModifier.TF_BREASTS, TFModifier.TF_MOD_COUNT, TFPotency.MINOR_BOOST, 1), ""));
 					}
 				}
-				maximumEffects.add(new PossibleItemEffect(new ItemEffect(itemType.getEnchantmentEffect(), TFModifier.TF_FACE, TFModifier.TF_TYPE_1, TFPotency.MINOR_BOOST, 1), ""));
+			case NORMAL:
+				normalEffects.add(new PossibleItemEffect(new ItemEffect(itemType.getEnchantmentEffect(), TFModifier.TF_SKIN, TFModifier.TF_TYPE_1, TFPotency.MINOR_BOOST, 1), ""));
+				if(Main.getProperties().multiBreasts>0) {
+					if(target.getBreastRows()<3) {
+						normalEffects.add(new PossibleItemEffect(new ItemEffect(itemType.getEnchantmentEffect(), TFModifier.TF_BREASTS, TFModifier.TF_MOD_COUNT, TFPotency.MINOR_BOOST, 1), ""));
+					}
+					if(target.getBreastRows()<2) {
+						normalEffects.add(new PossibleItemEffect(new ItemEffect(itemType.getEnchantmentEffect(), TFModifier.TF_BREASTS, TFModifier.TF_MOD_COUNT, TFPotency.MINOR_BOOST, 1), ""));
+					}
+				}
+				normalEffects.add(new PossibleItemEffect(new ItemEffect(itemType.getEnchantmentEffect(), TFModifier.TF_FACE, TFModifier.TF_TYPE_1, TFPotency.MINOR_BOOST, 1), ""));
 				
 			case REDUCED:
 				reducedEffects.add(new PossibleItemEffect(new ItemEffect(itemType.getEnchantmentEffect(), TFModifier.TF_ASS, TFModifier.TF_TYPE_1, TFPotency.MINOR_BOOST, 1), ""));
@@ -525,7 +555,7 @@ public class Brax extends NPC {
 		}
 		
 		effects.addAll(minimumEffects);
-		effects.addAll(getFeminineEffects(target, itemType));
+		effects.addAll(getFeminineEffects(target, itemType, effectTier));
 		
 		// Remove crotch-boobs:
 		effects.add(new PossibleItemEffect(new ItemEffect(itemType.getEnchantmentEffect(), TFModifier.TF_BREASTS_CROTCH, TFModifier.REMOVAL, TFPotency.MINOR_BOOST, 1), ""));
@@ -540,12 +570,13 @@ public class Brax extends NPC {
 		effects.add(new PossibleItemEffect(new ItemEffect(itemType.getEnchantmentEffect(), TFModifier.TF_VAGINA, TFModifier.TF_MOD_WETNESS, TFPotency.MAJOR_BOOST, 1), ""));
 
 		effects.addAll(reducedEffects);
+		effects.addAll(normalEffects);
 		effects.addAll(maximumEffects);
 		
 		return new TransformativePotion(itemType, effects);
 	}
 	
-	private static List<PossibleItemEffect> getFeminineEffects(GameCharacter target, AbstractItemType itemType) {
+	private static List<PossibleItemEffect> getFeminineEffects(GameCharacter target, AbstractItemType itemType, FurryPreference effectTier) {
 		List<PossibleItemEffect> effects = new ArrayList<>();
 		
 		for(int i=target.getFemininityValue(); i<Femininity.FEMININE_STRONG.getMinimumFemininity(); i+=15) { // Turn feminine:
@@ -557,13 +588,13 @@ public class Brax extends NPC {
 		if(target.getBodySizeValue()>BodySize.TWO_AVERAGE.getMinimumValue()) {
 			effects.add(new PossibleItemEffect(new ItemEffect(itemType.getEnchantmentEffect(), TFModifier.TF_CORE, TFModifier.TF_MOD_SIZE_TERTIARY, TFPotency.MAJOR_DRAIN, 1), ""));
 		}
-		for(int i=target.getBreastSize().getMeasurement(); i<CupSize.E.getMeasurement(); i+=3) {
+		for(int i=target.getBreastSize().getMeasurement(); i<(effectTier == FurryPreference.MAXIMUM ? CupSize.H.getMeasurement() : CupSize.E.getMeasurement()); i+=3) {
 			effects.add(new PossibleItemEffect(new ItemEffect(itemType.getEnchantmentEffect(), TFModifier.TF_BREASTS, TFModifier.TF_MOD_SIZE, TFPotency.MAJOR_BOOST, 1), ""));
 		}
-		if(target.getHipSize().getValue()<HipSize.FOUR_WOMANLY.getValue()) {
+		if(target.getHipSize().getValue()<(effectTier == FurryPreference.MAXIMUM ? HipSize.SIX_EXTREMELY_WIDE.getValue() : HipSize.FOUR_WOMANLY.getValue())) {
 			effects.add(new PossibleItemEffect(new ItemEffect(itemType.getEnchantmentEffect(), TFModifier.TF_ASS, TFModifier.TF_MOD_SIZE_SECONDARY, TFPotency.MAJOR_BOOST, 1), ""));
 		}
-		if(target.getAssSize().getValue()<AssSize.FOUR_LARGE.getValue()) {
+		if(target.getAssSize().getValue()<(effectTier == FurryPreference.MAXIMUM ? AssSize.SIX_MASSIVE.getValue() : AssSize.FOUR_LARGE.getValue())) {
 			effects.add(new PossibleItemEffect(new ItemEffect(itemType.getEnchantmentEffect(), TFModifier.TF_ASS, TFModifier.TF_MOD_SIZE, TFPotency.MAJOR_BOOST, 1), ""));
 		}
 		if(target.getHairRawLengthValue()>0) { // If bald, leave bald.
@@ -571,7 +602,7 @@ public class Brax extends NPC {
 				effects.add(new PossibleItemEffect(new ItemEffect(itemType.getEnchantmentEffect(), TFModifier.TF_HAIR, TFModifier.TF_MOD_SIZE, TFPotency.MAJOR_BOOST, 1), ""));
 			}
 		}
-		for(int i=target.getLipSizeValue(); i<LipSize.TWO_FULL.getValue(); i+=2) {
+		for(int i=target.getLipSizeValue(); i<(effectTier == FurryPreference.MAXIMUM ? LipSize.FOUR_HUGE.getValue() : LipSize.TWO_FULL.getValue()); i+=2) {
 			effects.add(new PossibleItemEffect(new ItemEffect(itemType.getEnchantmentEffect(), TFModifier.TF_FACE, TFModifier.TF_MOD_SIZE, TFPotency.BOOST, 1), ""));
 		}
 		

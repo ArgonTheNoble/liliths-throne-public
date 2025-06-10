@@ -469,6 +469,7 @@ public class OptionsController {
 				new Util.Value<>("SHARED_ENCYCLOPEDIA", PropertyValue.sharedEncyclopedia),
 				new Util.Value<>("WEATHER_INTERRUPTION", PropertyValue.weatherInterruptions),
 				new Util.Value<>("ENCHANTMENT_INTERRUPTION", PropertyValue.enchantmentInterruptions),
+				new Util.Value<>("SEX_TRANSFORMATION", PropertyValue.sexTransformations),
 				new Util.Value<>("DIALOGUE_COPY", PropertyValue.automaticDialogueCopy),
 				new Util.Value<>("SILLY", PropertyValue.sillyMode)));
 	}

@@ -2,9 +2,12 @@ package com.lilithsthrone.game.character.gender;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 import com.lilithsthrone.game.character.body.valueEnums.Femininity;
+import com.lilithsthrone.game.character.persona.SexualOrientation;
 import com.lilithsthrone.game.settings.ContentPreferenceValue;
+import com.lilithsthrone.game.settings.ForcedTFTendency;
 import com.lilithsthrone.main.Main;
 import com.lilithsthrone.utils.Util;
 import com.lilithsthrone.utils.colours.Colour;
@@ -157,7 +160,39 @@ public enum Gender {
 	public ContentPreferenceValue getGenderPreferenceDefault() {
 		return genderPreferenceDefault;
 	}
-	
+	public static Gender getGenderFromUserPreferences(SexualOrientation orientation) {
+		ForcedTFTendency tend = Main.getProperties().getForcedTFTendency();
+
+		Map<Gender, Integer> genderMap = new HashMap<>();
+		Set<PronounType> wantedTypes = Util.newHashSetOfValues(PronounType.values());
+		if(tend == ForcedTFTendency.FEMININE_HEAVY)
+			wantedTypes.remove(PronounType.MASCULINE);
+		else if(tend == ForcedTFTendency.MASCULINE_HEAVY)
+			wantedTypes.remove(PronounType.FEMININE);
+
+		switch(orientation){
+			case ANDROPHILIC:
+				if(!tend.isFeminine())
+					wantedTypes.remove(PronounType.FEMININE);
+				break;
+			case GYNEPHILIC:
+				if(!tend.isMasculine())
+					wantedTypes.remove(PronounType.MASCULINE);
+				break;
+			case AMBIPHILIC:
+				break;
+		}
+		
+		for(Gender g : Gender.values()) {
+			if(wantedTypes.contains(g.getType()))
+				genderMap.put(g, Main.getProperties().genderPreferencesMap.get(g));
+		}
+
+		if(genderMap.isEmpty())
+			return Gender.F_V_B_FEMALE;
+		return Util.getRandomObjectFromWeightedMap(genderMap);
+	}
+
 	public static Gender getGenderFromUserPreferences(boolean requiresVagina, boolean requiresPenis) {
 		Map<Gender, Integer> genderMap = new HashMap<>();
 		

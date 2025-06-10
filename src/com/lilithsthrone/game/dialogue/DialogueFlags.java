@@ -67,6 +67,8 @@ public class DialogueFlags implements XMLSaving {
 	private Colour natalyaCollarColour;
 	private int natalyaPoints;
 	private String sadistNatalyaSlave;
+
+	private int timesTransformedByBrax;
 	
 	// --- Sets: --- //
 	
@@ -121,6 +123,8 @@ public class DialogueFlags implements XMLSaving {
 		natalyaCollarColour = PresetColour.CLOTHING_BRONZE;
 		natalyaPoints = 0;
 		sadistNatalyaSlave = "";
+
+		timesTransformedByBrax = 0;
 	}
 	
 	public Element saveAsXML(Element parentElement, Document doc) {
@@ -154,6 +158,8 @@ public class DialogueFlags implements XMLSaving {
 		XMLUtil.createXMLElementWithValue(doc, element, "natalyaCollarColour", PresetColour.getIdFromColour(natalyaCollarColour));
 		XMLUtil.createXMLElementWithValue(doc, element, "natalyaPoints", String.valueOf(natalyaPoints));
 		XMLUtil.createXMLElementWithValue(doc, element, "sadistNatalyaSlave", sadistNatalyaSlave);
+
+		XMLUtil.createXMLElementWithValue(doc, element, "timesTransformedByBrax", String.valueOf(timesTransformedByBrax));
 		
 		Element savedLongsElement = doc.createElement("savedLongs");
 		element.appendChild(savedLongsElement);
@@ -232,6 +238,11 @@ public class DialogueFlags implements XMLSaving {
 			}
 			newFlags.natalyaPoints = Integer.valueOf(((Element)parentElement.getElementsByTagName("natalyaPoints").item(0)).getAttribute("value"));
 			newFlags.sadistNatalyaSlave = ((Element)parentElement.getElementsByTagName("sadistNatalyaSlave").item(0)).getAttribute("value");
+		} catch(Exception ex) {
+		}
+
+		try {
+			newFlags.timesTransformedByBrax = Integer.valueOf(((Element)parentElement.getElementsByTagName("timesTransformedByBrax").item(0)).getAttribute("value"));
 		} catch(Exception ex) {
 		}
 
@@ -605,5 +616,17 @@ public class DialogueFlags implements XMLSaving {
 
 	public void setSadistNatalyaSlave(String sadistNatalyaSlave) {
 		this.sadistNatalyaSlave = sadistNatalyaSlave;
+	}
+
+	public int getTimesTransformedByBrax() {
+		return this.timesTransformedByBrax;
+	}
+
+	public void setTimesTransformedByBrax(int times) {
+		this.timesTransformedByBrax = times;
+	}
+
+	public void incrementTimesTransformedByBrax() {
+		this.timesTransformedByBrax += 1;
 	}
 }

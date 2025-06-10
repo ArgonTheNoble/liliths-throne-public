@@ -449,6 +449,8 @@ public class Encounter {
 //						for(NPC npc : offspringAvailable) {
 //							System.out.println(npc.getName());
 //						}
+						if(Main.game.isDebugMode())
+							System.err.println("Offspring encounter chance: " + IncestEncounterRate());
 						return SpawnAndStartChildHere(offspringAvailable);
 					}
 				}

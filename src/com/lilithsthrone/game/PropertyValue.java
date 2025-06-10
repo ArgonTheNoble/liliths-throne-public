@@ -26,6 +26,7 @@ public enum PropertyValue {
 	sillyMode(false),
 	weatherInterruptions(true),
 	enchantmentInterruptions(true),
+	sexTransformations(true),
 	automaticDialogueCopy(false),
 
 	autoLocale(true),

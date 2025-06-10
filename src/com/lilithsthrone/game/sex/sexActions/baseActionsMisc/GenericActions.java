@@ -281,6 +281,13 @@ public class GenericActions {
 			for(Entry<GameCharacter, GameCharacter> entry : targetedCharacters.entrySet()) {
 				GameCharacter dom = entry.getKey();
 				GameCharacter sub = entry.getValue();
+
+				if(dom.isPlayer() && sub instanceof NPC && Main.sex != null) {
+					Main.sex.addNPCMarkingPlayer((NPC)sub);
+				} else if (sub.isPlayer() && dom instanceof NPC && Main.sex != null) {
+					Main.sex.addNPCMarkingPlayer((NPC)dom);
+				}
+
 				sb.append(UtilText.parse(dom, sub,
 						"<p style='text-align:center;'>"
 //							+ "<b>[style.boldSexDom([npc.Name])] dominantly "+(Main.sex.isConsensual()?"having sex with":"fucking")+" [style.boldSexSub([npc2.name])]</b>"

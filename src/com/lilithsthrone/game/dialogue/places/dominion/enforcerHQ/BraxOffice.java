@@ -7,6 +7,7 @@ import com.lilithsthrone.game.character.attributes.CorruptionLevel;
 import com.lilithsthrone.game.character.body.coverings.BodyCoveringType;
 import com.lilithsthrone.game.character.body.coverings.Covering;
 import com.lilithsthrone.game.character.body.valueEnums.Femininity;
+import com.lilithsthrone.game.character.body.valueEnums.FluidModifier;
 import com.lilithsthrone.game.character.effects.Perk;
 import com.lilithsthrone.game.character.fetishes.Fetish;
 import com.lilithsthrone.game.character.npc.dominion.Brax;
@@ -571,12 +572,20 @@ public class BraxOffice {
 						Main.game.getPlayer().setEyeCovering(new Covering(BodyCoveringType.EYE_LYCAN, PresetColour.EYE_YELLOW));
 						Main.game.getPlayer().setHairCovering(new Covering(BodyCoveringType.HAIR_LYCAN_FUR, PresetColour.COVERING_BLACK), true);
 						Main.game.getPlayer().setSkinCovering(new Covering(BodyCoveringType.LYCAN_FUR, PresetColour.COVERING_WHITE), true);
+
+						Main.game.getDialogueFlags().incrementTimesTransformedByBrax();
 						
 						if(Main.getProperties().forcedFetishPercentage!=0 && !Main.game.getPlayer().hasFetish(Fetish.FETISH_SUBMISSIVE)) {
 							Main.game.getTextEndStringBuilder().append(Main.game.getPlayer().addFetish(Fetish.FETISH_SUBMISSIVE));
 						}
-						if(Main.game.getPlayer().getAttributeValue(Attribute.MAJOR_CORRUPTION)<CorruptionLevel.TWO_HORNY.getMinimumValue()) {
-							Main.game.getTextEndStringBuilder().append(Main.game.getPlayer().setAttribute(Attribute.MAJOR_CORRUPTION, CorruptionLevel.TWO_HORNY.getMinimumValue()));
+
+						int newCorruption = Math.min(Main.game.getDialogueFlags().getTimesTransformedByBrax() * 10, 100);
+						if(Main.game.getPlayer().getAttributeValue(Attribute.MAJOR_CORRUPTION) < newCorruption) {
+							Main.game.getTextEndStringBuilder().append(Main.game.getPlayer().setAttribute(Attribute.MAJOR_CORRUPTION, newCorruption));
+						}
+
+						if(Main.game.getDialogueFlags().getTimesTransformedByBrax() == 5) {
+							Main.game.getNpc(Brax.class).addCumModifier(FluidModifier.ADDICTIVE);
 						}
 					}
 				};

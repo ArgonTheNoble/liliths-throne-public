@@ -16,6 +16,7 @@ import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.Random;
 
 import com.lilithsthrone.game.PropertyValue;
 import com.lilithsthrone.game.character.FluidStored;
@@ -60,9 +61,11 @@ import com.lilithsthrone.game.inventory.ItemTag;
 import com.lilithsthrone.game.inventory.clothing.AbstractClothing;
 import com.lilithsthrone.game.inventory.clothing.ClothingType;
 import com.lilithsthrone.game.inventory.clothing.DisplacementType;
+import com.lilithsthrone.game.inventory.enchanting.PossibleItemEffect;
 import com.lilithsthrone.game.inventory.item.AbstractItem;
 import com.lilithsthrone.game.inventory.item.AbstractItemType;
 import com.lilithsthrone.game.inventory.item.ItemType;
+import com.lilithsthrone.game.inventory.item.TransformativePotion;
 import com.lilithsthrone.game.inventory.weapon.AbstractWeapon;
 import com.lilithsthrone.game.occupantManagement.MilkingRoom;
 import com.lilithsthrone.game.occupantManagement.slave.SlaveJob;
@@ -293,6 +296,8 @@ public class Sex {
 	private boolean sexFinished;
 	
 	private AbstractClothing selectedClothing;
+
+	private Set<NPC> charactersMarkingPlayer;
 	
 
 	public Sex() {
@@ -404,6 +409,8 @@ public class Sex {
 //		}
 
 		charactersImmobilised = new HashMap<>(sexManager.getStartingCharactersImmobilised());
+
+		charactersMarkingPlayer = new HashSet<>();
 		
 		initialSexManager = sexManager;
 		setSexManager(sexManager);
@@ -652,7 +659,7 @@ public class Sex {
 				}
 			}
 		}
-		
+
 		// Starting text:
 		sexSB = new StringBuilder(sexStartDescription);
 
@@ -1723,6 +1730,32 @@ public class Sex {
 			for(AbstractStatusEffect se : new ArrayList<>(participant.getStatusEffects())) {
 				if(se.isRemoveAtEndOfSex()) {
 					participant.removeStatusEffect(se);
+				}
+			}
+		}
+
+		for(GameCharacter c : getAmountCummedOnByPartners(Main.game.getPlayer()).keySet()) {
+			if(!c.isPlayer()) 
+				charactersMarkingPlayer.add((NPC)c);
+		}
+		for(GameCharacter c : getPartnersCummingInside(Main.game.getPlayer())) {
+			if(!c.isPlayer()) 
+				charactersMarkingPlayer.add((NPC)c);
+		}
+
+		//System.err.println("markings: " + charactersMarkingPlayer.size());
+		if(Main.game.isSexTransformationsEnabled()) {
+			int tfsPerMarker = Main.game.getPlayer().getFetishDesire(Fetish.FETISH_TRANSFORMATION_RECEIVING).getValue();
+			if(tfsPerMarker > 0 && !charactersMarkingPlayer.isEmpty()) {
+				TransformativePotion pot;
+				List<PossibleItemEffect> effects;
+				for(NPC npc : charactersMarkingPlayer) {
+					pot = npc.generateTransformativePotion(Main.game.getPlayer());
+					if(pot != null) {
+						effects = pot.getEffects().stream().sorted((a, b) -> new Random().nextInt(2) - 1).limit(tfsPerMarker).collect(Collectors.toList());
+						pot = new TransformativePotion(pot.getItemType(), effects);
+						endSexSB.append(npc.applyPotion(pot, Main.game.getPlayer()));
+					}
 				}
 			}
 		}
@@ -3512,6 +3545,12 @@ public class Sex {
 		return wetSB.toString();
 	}
 	
+	public boolean addNPCMarkingPlayer(NPC npc) {
+		//System.err.println(npc.getName() + " marking player");
+		if(Main.game.isInSex() && charactersMarkingPlayer != null)
+			return charactersMarkingPlayer.add(npc);
+		return false;
+	}
 
 	private String transferLubricationNoAppend(GameCharacter character, SexAreaInterface characterArea, GameCharacter targetCharacter, SexAreaInterface targetArea) {
 		List<String> lubricationTransferred = new ArrayList<>();
@@ -3528,6 +3567,16 @@ public class Sex {
 					wetAreas.get(targetCharacter).get(targetArea).get(lubricantProvider).add(lt);
 					lubricationTransferred.add((lubricantProvider==null?"":UtilText.parse(lubricantProvider, "[npc.namePos] "))+lt.getName(lubricantProvider));
 					lastLubricationPlural = lt.isPlural();
+
+					if(targetCharacter != null && character != null && lt != null && lubricantProvider != null) {
+						//System.err.println(targetCharacter.getName() + " lubed by " + lubricantProvider.getName() + " with " + lt.getName(lubricantProvider));
+						if(targetCharacter.isPlayer() && !lubricantProvider.isPlayer() && charactersMarkingPlayer.contains((NPC)lubricantProvider)) {
+							
+							//System.err.println("  adding mark");
+							addNPCMarkingPlayer((NPC)lubricantProvider);
+							
+						}
+					}
 				}
 			}
 		}
@@ -3551,6 +3600,14 @@ public class Sex {
 					wetAreas.get(character).get(characterArea).get(lubricantProvider).add(lt);
 					lubricationTransferred.add((lubricantProvider==null?"":UtilText.parse(lubricantProvider, "[npc.namePos] "))+lt.getName(lubricantProvider));
 					lastLubricationPlural = lt.isPlural();
+
+					if(character != null && targetCharacter != null && lt != null && lubricantProvider != null) {
+						//System.err.println(character.getName() + " lubed by " + lubricantProvider.getName() + " with " + lt.getName(lubricantProvider));
+						if(character.isPlayer() && !lubricantProvider.isPlayer() && charactersMarkingPlayer.contains((NPC)lubricantProvider)) {
+							//System.err.println("  adding mark");
+							charactersMarkingPlayer.add((NPC)lubricantProvider);
+						}
+					}
 				}
 			}
 		}
@@ -3563,7 +3620,7 @@ public class Sex {
 							:" has already lubricated ")
 						+(character.isPlayer()?"your ":character.getName("the")+"'s ")+characterArea.getName(character)+"."));
 		}
-		
+
 		return lubeSB.toString();
 	}
 	
@@ -6170,6 +6227,22 @@ public class Sex {
 	
 	public void incrementTimesCummedInside(GameCharacter character, GameCharacter target, SexAreaInterface areaCummedIn, int increment) {
 		setTimesCummedInside(character, target, areaCummedIn, getTimesCummedInside(character, target, areaCummedIn)+increment);
+	}
+
+	public Set<GameCharacter> getPartnersCummingInside(GameCharacter target) {
+		Set<GameCharacter> cummedInByPartners = new HashSet<>();
+		for(Entry<GameCharacter, Map<GameCharacter, Map<SexAreaInterface, Integer>>> e : new HashMap<>(cummedInsideMap).entrySet()) {
+			if(e.getValue().containsKey(target)) {
+				boolean didCum = false;
+				for(Integer n : e.getValue().get(target).values()) {
+					if(n != null && n > 0)
+						didCum = true;
+				}
+				if(didCum)
+					cummedInByPartners.add(e.getKey());
+			}
+		}
+		return cummedInByPartners;
 	}
 	
 	// Cummed on:
