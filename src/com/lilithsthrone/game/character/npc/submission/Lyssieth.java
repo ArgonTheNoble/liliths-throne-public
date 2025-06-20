@@ -347,6 +347,11 @@ public class Lyssieth extends NPC {
 		return true;
 	}
 	
+	@Override
+	public int getLevel() {
+		return 1000;
+	}
+	
 //	@Override
 //	public void turnUpdate() {
 //		if(!Main.game.getCharactersPresent().contains(this)) {
@@ -370,15 +375,9 @@ public class Lyssieth extends NPC {
 	@Override
 	public String getArtworkFolderName() {
 		if(this.getTorsoType().getRace()==Race.HUMAN) {
-			if(this.isVisiblyPregnant()) {
-				return "LyssiethHumanPregnant";
-			}
 			return "LyssiethHuman";
 			
 		} else {
-			if(this.isVisiblyPregnant()) {
-				return "LyssiethDemonPregnant";
-			}
 			return "LyssiethDemon";
 		}
 	}

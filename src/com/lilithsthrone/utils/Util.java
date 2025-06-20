@@ -393,6 +393,18 @@ public class Util {
 		list.removeIf(e -> e==null);
 		return list;
 	}
+
+	/**
+	 * @param values The values to add to the new list.
+	 * @return A list of provided values, with nulls retained.
+	 */
+	@SafeVarargs
+	public static <U> ArrayList<U> newArrayListOfValuesKeepNulls(U... values) {
+		ArrayList<U> list = new ArrayList<>(Arrays.asList(values));
+//		list.removeIf(e -> e==null);
+		return list;
+	}
+	
 	
 	@SafeVarargs
 	/**
@@ -1788,9 +1800,13 @@ public class Util {
 	}
 	
 	public static String charactersToStringListOfNames(Collection<GameCharacter> characters) {
+		return charactersToStringListOfNames(characters, false);
+	}
+	
+	public static String charactersToStringListOfNames(Collection<GameCharacter> characters, boolean withColouring) {
 		return Util.toStringList(characters,
 				(GameCharacter c) -> 
-					UtilText.parse(c, "[npc.name]"),
+					UtilText.parse(c, (withColouring?"<span style='color:"+c.getFemininity().getColour().toWebHexString()+";'>":"")+"[npc.name]"+(withColouring?"</span>":"")),
 				"and");
 	}
 

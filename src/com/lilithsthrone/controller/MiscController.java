@@ -656,7 +656,7 @@ public class MiscController {
 						Main.game.setContent(new Response("", "", Main.game.getCurrentDialogueNode()));
 					}
 				}, false);
-				MainController.addTooltipListeners(id, new TooltipInformationEventListener().setFetish(f, targetedCharacter));
+				MainController.addTooltipListeners(id, new TooltipInformationEventListener().setFetish(f, targetedCharacter, true));
 			}
 			
 			id = Fetish.getIdFromFetish(f)+"_EXPERIENCE";
@@ -1200,34 +1200,40 @@ public class MiscController {
 		if (currentLimit>0) {
 			id = "LIMIT_MINIMUM";
 			if (MainController.document.getElementById(id) != null) {
-				MainController.addEventListener(MainController.document, id, "click", new EnchantmentEventListener().setLimit(0), false);
+				MainController.addEventListener(MainController.document, id, "click",
+						new EnchantmentEventListener().setLimit(0), false);
 			}
 			
 			id = "LIMIT_DECREASE_LARGE";
 			if (MainController.document.getElementById(id) != null) {
-				MainController.addEventListener(MainController.document, id, "click", new EnchantmentEventListener().setLimit(Math.max(0, LilayaDressingRoomDialogue.getLimit()-effect.getLargeLimitChange())), false);
+				MainController.addEventListener(MainController.document, id, "click",
+						new EnchantmentEventListener().setLimit(Math.max(0, LilayaDressingRoomDialogue.getLimit()-effect.getLargeLimitChange(LilayaDressingRoomDialogue.getPrimaryMod(), LilayaDressingRoomDialogue.getSecondaryMod()))), false);
 			}
 			
 			id = "LIMIT_DECREASE";
 			if (MainController.document.getElementById(id) != null) {
-				MainController.addEventListener(MainController.document, id, "click", new EnchantmentEventListener().setLimit(LilayaDressingRoomDialogue.getLimit()-effect.getSmallLimitChange()), false);
+				MainController.addEventListener(MainController.document, id, "click",
+						new EnchantmentEventListener().setLimit(LilayaDressingRoomDialogue.getLimit()-effect.getSmallLimitChange(LilayaDressingRoomDialogue.getPrimaryMod(), LilayaDressingRoomDialogue.getSecondaryMod())), false);
 			}
 		}
 		
 		if (currentLimit<maxLimit) {
 			id = "LIMIT_INCREASE";
 			if (MainController.document.getElementById(id) != null) {
-				MainController.addEventListener(MainController.document, id, "click", new EnchantmentEventListener().setLimit(LilayaDressingRoomDialogue.getLimit()+effect.getSmallLimitChange()), false);
+				MainController.addEventListener(MainController.document, id, "click",
+						new EnchantmentEventListener().setLimit(LilayaDressingRoomDialogue.getLimit()+effect.getSmallLimitChange(LilayaDressingRoomDialogue.getPrimaryMod(), LilayaDressingRoomDialogue.getSecondaryMod())), false);
 			}
 			
 			id = "LIMIT_INCREASE_LARGE";
 			if (MainController.document.getElementById(id) != null) {
-				MainController.addEventListener(MainController.document, id, "click", new EnchantmentEventListener().setLimit(Math.min(maxLimit, LilayaDressingRoomDialogue.getLimit()+effect.getLargeLimitChange())), false);
+				MainController.addEventListener(MainController.document, id, "click",
+						new EnchantmentEventListener().setLimit(Math.min(maxLimit, LilayaDressingRoomDialogue.getLimit()+effect.getLargeLimitChange(LilayaDressingRoomDialogue.getPrimaryMod(), LilayaDressingRoomDialogue.getSecondaryMod()))), false);
 			}
 			
 			id = "LIMIT_MAXIMUM";
 			if (MainController.document.getElementById(id) != null) {
-				MainController.addEventListener(MainController.document, id, "click", new EnchantmentEventListener().setLimit(maxLimit), false);
+				MainController.addEventListener(MainController.document, id, "click",
+						new EnchantmentEventListener().setLimit(maxLimit), false);
 			}
 		}
 		

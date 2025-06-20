@@ -861,14 +861,21 @@ public abstract class AbstractClothing extends AbstractCoreItem implements XMLSa
 			} catch(Exception ex) {
 			}
 		}
-		
+
+		boolean handleHoodStickers = Main.isVersionOlderThan(Game.loadingVersion, "0.4.10.12") && clothing.getClothingType()==ClothingType.getClothingTypeFromId("innoxia_latex_hood");
 		// Load stickers:
 		Element stickersElement = (Element) parentElement.getElementsByTagName("stickers").item(0);
 		if(stickersElement!=null) {
 			NodeList nodes = stickersElement.getElementsByTagName("sticker");
 			for(int i=0; i<nodes.getLength(); i++) {
 				Element stickerElement = (Element) nodes.item(i);
-				clothing.setSticker(stickerElement.getAttribute("category").toLowerCase(), stickerElement.getTextContent().toLowerCase());
+				String categoryString = stickerElement.getAttribute("category").toLowerCase();
+				String categoryIDString = stickerElement.getTextContent().toLowerCase();
+				if(handleHoodStickers) {
+					categoryString = categoryString.replace("mouth hole", "mouth");
+					categoryString = categoryString.replace("eye holes", "eyes");
+				}
+				clothing.setSticker(categoryString, categoryIDString);
 			}
 		}
 		
@@ -1088,7 +1095,10 @@ public abstract class AbstractClothing extends AbstractCoreItem implements XMLSa
 
 	private static StringBuilder descriptionSB = new StringBuilder();
 
-	public String getTypeDescription() {
+	/**
+	 * @return A basic, parsed, description of this clothing's type. (To be used in tooltips.)
+	 */
+	public String getTypeDescription(GameCharacter characterEquippedOn) {
 		String description = this.getClothingType().getDescription();
 		
 		Map<StickerCategory, Sticker> stickersAsObjects = this.getStickersAsObjects();
@@ -1101,16 +1111,16 @@ public abstract class AbstractClothing extends AbstractCoreItem implements XMLSa
 			}
 			description += st.getDescription();
 		}
-		
-		return description;
+
+		return UtilText.parse(characterEquippedOn, this, description);
 	}
 	
 	@Override
-	public String getDescription() {
+	public String getDescription(GameCharacter characterEquippedOn) {
 		descriptionSB.setLength(0);
 		
 		descriptionSB.append("<p>");
-			descriptionSB.append(getTypeDescription());
+			descriptionSB.append(getTypeDescription(characterEquippedOn));
 			descriptionSB.append("<br/>");
 			if(enchantmentKnown) {
 				descriptionSB.append((getClothingType().isPlural()?"They have":"It has")+" a value of: "+UtilText.formatAsMoney(getValue()));
@@ -1160,7 +1170,7 @@ public abstract class AbstractClothing extends AbstractCoreItem implements XMLSa
 					+ getClothingType().getClothingSet().getName() + "</b> set." + "</p>");
 		}
 
-		return descriptionSB.toString();
+		return UtilText.parse(characterEquippedOn, this, descriptionSB.toString());
 	}
 
 	public AbstractClothingType getClothingType() {
@@ -1355,13 +1365,16 @@ public abstract class AbstractClothing extends AbstractCoreItem implements XMLSa
 		}
 	}
 	
+	//TODO why are getName() and getDisplayName() both needed? Surely just one should be used......
+	
 	/**
 	 * @param withDeterminer
 	 *            True if you want the determiner to prefix the name
 	 * @return A string in the format "blue shirt" or "a blue shirt"
 	 */
 	public String getName(boolean withDeterminer) {
-		return (withDeterminer
+		return UtilText.parse(this,
+				(withDeterminer
 					? (getClothingType().isPlural()
 							? getClothingType().getDeterminer()
 							: UtilText.generateSingularDeterminer(
@@ -1373,12 +1386,13 @@ public abstract class AbstractClothing extends AbstractCoreItem implements XMLSa
 				+ (getClothingType().isAppendColourName()
 					?getColourName()+" "
 					:"")
-				+ getName();
+				+ getName());
 	}
 	
 	public String getName(boolean withDeterminer, boolean withRarityColour) {
 		if(!enchantmentKnown) {
-			return (withDeterminer
+			return UtilText.parse(this,
+					(withDeterminer
 						? (getClothingType().isPlural()
 								? getClothingType().getDeterminer()
 								: UtilText.generateSingularDeterminer(
@@ -1392,23 +1406,24 @@ public abstract class AbstractClothing extends AbstractCoreItem implements XMLSa
 							:"")
 					+ (withRarityColour
 							? (" <span style='color: " + PresetColour.RARITY_UNKNOWN.toWebHexString() + ";'>" + getName() + "</span>")
-							: " "+getName());
+							: " "+getName()));
 		} else {
-			return (withDeterminer
-					? (getClothingType().isPlural()
-							? getClothingType().getDeterminer()
-							: UtilText.generateSingularDeterminer(
-								getClothingType().isAppendColourName()
-									?getColourName()
-									:getName()))
-						+" "
-					: "")
-					+ (getClothingType().isAppendColourName()
-							?getColourName()+" "
-							:"")
-					+ (withRarityColour
-							? (" <span style='color: " + this.getRarity().getColour().toWebHexString() + ";'>" + getName() + "</span>")
-							: " "+getName());
+			return UtilText.parse(this,
+					(withDeterminer
+						? (getClothingType().isPlural()
+								? getClothingType().getDeterminer()
+								: UtilText.generateSingularDeterminer(
+									getClothingType().isAppendColourName()
+										?getColourName()
+										:getName()))
+							+" "
+						: "")
+						+ (getClothingType().isAppendColourName()
+								?getColourName()+" "
+								:"")
+						+ (withRarityColour
+								? (" <span style='color: " + this.getRarity().getColour().toWebHexString() + ";'>" + getName() + "</span>")
+								: " "+getName()));
 		}
 	}
 
@@ -1429,24 +1444,32 @@ public abstract class AbstractClothing extends AbstractCoreItem implements XMLSa
 	public String getDisplayName(boolean withRarityColour, boolean withEnchantmentPostFix) {
 		if(!this.name.replaceAll("\u00A0"," ").equalsIgnoreCase(this.getClothingType().getName().replaceAll("\u00A0"," "))) { // If this item has a custom name, just display that:
 //			System.out.println(this.name+ " | "+this.getClothingType().getName());
-			return (withRarityColour
-					? (" <span style='color: " + (!this.isEnchantmentKnown()?PresetColour.RARITY_UNKNOWN:this.getRarity().getColour()).toWebHexString() + ";'>" + getName() + "</span>")
-					: getName());
+			return UtilText.parse(this,
+					(withRarityColour
+						? (" <span style='color: " + (!this.isEnchantmentKnown()?PresetColour.RARITY_UNKNOWN:this.getRarity().getColour()).toWebHexString() + ";'>" + getName() + "</span>")
+						: getName()));
 		}
 		
 		Colour c = !this.isEnchantmentKnown()?PresetColour.RARITY_UNKNOWN:this.getRarity().getColour();
-		return Util.capitaliseSentence(
-				(getClothingType().isAppendColourName()
-					?getColourName()
-					:"")
-				+ (!this.getPattern().equalsIgnoreCase("none")?" "+Pattern.getPattern(this.getPattern()).getNiceName():"")
-				+ (withRarityColour
-					? (" <span style='color: " + c.toWebHexString() + "; "+(this.isVibrator()?"text-shadow: 2px 2px "+c.getShades()[0]+";":"")+"'>" + (this.isVibrator()?"vibrating ":"")+getName() + "</span>")
-					: " "+(this.isVibrator()?UtilText.applyVibration("vibrating "+getName(), c):getName()))
-				+ ((withEnchantmentPostFix && !this.getEffects().isEmpty() && this.isEnchantmentKnown() && this.getRarity()!=Rarity.QUEST && this.getRarity()!=Rarity.LEGENDARY && this.getRarity()!=Rarity.EPIC)
-						? " "+getEnchantmentPostfix(withRarityColour, "span")
-						: "")
-				);
+		return UtilText.parse(this,
+				Util.capitaliseSentence(
+					(getClothingType().isAppendColourName()
+						?getColourName()
+						:"")
+					+ (!this.getPattern().equalsIgnoreCase("none")?" "+Pattern.getPattern(this.getPattern()).getNiceName():"")
+					+ (withRarityColour
+						? (" <span style='color: " + c.toWebHexString() + "; "+(this.isVibrator()?"text-shadow: 2px 2px "+c.getShades()[0]+";":"")+"'>" + (this.isVibrator()?"vibrating ":"")+getName() + "</span>")
+						: " "+(this.isVibrator()?UtilText.applyVibration("vibrating "+getName(), c):getName()))
+					+ ((withEnchantmentPostFix
+							&& !this.getEffects().isEmpty()
+							&& this.getClothingType().isAppendEnchantmentPostfix()
+							&& this.isEnchantmentKnown()
+							&& this.getRarity()!=Rarity.QUEST
+							&& this.getRarity()!=Rarity.LEGENDARY
+							&& this.getRarity()!=Rarity.EPIC)
+								? " "+getEnchantmentPostfix(withRarityColour, "span")
+								: "")
+				));
 	}
 
 	@Override
@@ -2211,7 +2234,9 @@ public abstract class AbstractClothing extends AbstractCoreItem implements XMLSa
 	 */
 	public void setSealed(boolean sealed) {
 		if(sealed) {
-			this.addEffect(new ItemEffect(ItemEffectType.CLOTHING, TFModifier.CLOTHING_SPECIAL, TFModifier.CLOTHING_SEALING, TFPotency.MINOR_BOOST, 0));
+			if(!this.isSealed()) { // If this item is already sealed, don't add another effect...
+				this.addEffect(new ItemEffect(ItemEffectType.CLOTHING, TFModifier.CLOTHING_SPECIAL, TFModifier.CLOTHING_SEALING, TFPotency.MINOR_BOOST, 0));
+			}
 		} else {
 			setUnlocked(true);
 //			this.getEffects().removeIf(e -> e.getSecondaryModifier() == TFModifier.CLOTHING_SEALING);

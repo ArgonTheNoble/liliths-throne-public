@@ -210,6 +210,7 @@ import com.lilithsthrone.game.character.npc.submission.Takahashi;
 import com.lilithsthrone.game.character.npc.submission.Vengar;
 import com.lilithsthrone.game.character.persona.Occupation;
 import com.lilithsthrone.game.character.persona.SexualOrientation;
+import com.lilithsthrone.game.character.pregnancy.FertilisationType;
 import com.lilithsthrone.game.character.pregnancy.Litter;
 import com.lilithsthrone.game.character.quests.Quest;
 import com.lilithsthrone.game.character.quests.QuestLine;
@@ -269,6 +270,7 @@ import com.lilithsthrone.game.inventory.clothing.AbstractClothing;
 import com.lilithsthrone.game.inventory.clothing.AbstractClothingType;
 import com.lilithsthrone.game.inventory.clothing.ClothingType;
 import com.lilithsthrone.game.inventory.enchanting.AbstractItemEffectType;
+import com.lilithsthrone.game.inventory.enchanting.ItemEffectType;
 import com.lilithsthrone.game.inventory.item.AbstractItem;
 import com.lilithsthrone.game.inventory.item.AbstractItemType;
 import com.lilithsthrone.game.inventory.item.ItemType;
@@ -2188,6 +2190,9 @@ public class Game implements XMLSaving {
 		Main.game.getPlayer().updateInventoryListeners();
 		Main.game.getPlayer().updateAttributeListeners(true);
 		Main.game.getPlayer().calculateStatusEffects(0);
+		
+		Main.getProperties().addAllDiscoveredFromCurrentPlayer();
+		Main.saveProperties();
 	}
 
 	@SuppressWarnings("unchecked")
@@ -6297,7 +6302,7 @@ public class Game implements XMLSaving {
 	
 	public void generateAlleywayClothing() {
 		if(Math.random()<0.01f) {
-			randomItem = Main.game.getItemGen().generateClothing(ClothingType.MEGA_MILK, false);
+			randomItem = Main.game.getItemGen().generateClothing("innoxia_torso_tshirt_megamilk", false);
 			Main.game.getPlayerCell().getInventory().addClothing((AbstractClothing) randomItem);
 			
 		} else {
@@ -6550,5 +6555,16 @@ public class Game implements XMLSaving {
 					"<p>"
 						+ UtilText.parse(character, "You start having sex with [npc.name]")
 					+ "</p>"));
+	}
+	
+	/**
+	 * Impregnate the character (with the player as the father) and advance pregnancy to the final stage.
+	 */
+	public void impregnate(GameCharacter character) {
+		character.guaranteePregnancyOnNextRoll();
+		character.rollForPregnancy(Main.game.getPlayer(), Main.game.getPlayer().getBody(), 100, true, FertilisationType.NORMAL, Attribute.VIRILITY);
+		ItemEffectType.MOTHERS_MILK.applyEffect(null, null, null, 0, character, character, null);
+		ItemEffectType.MOTHERS_MILK.applyEffect(null, null, null, 0, character, character, null);
+		ItemEffectType.MOTHERS_MILK.applyEffect(null, null, null, 0, character, character, null);
 	}
 }
