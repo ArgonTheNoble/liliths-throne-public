@@ -69,9 +69,9 @@ public class OffspringSeed implements XMLSaving {
 	}
 
 	public OffspringSeed(NPC npc) {
-		this.fromPlayer = (npc.getMother()!=null && npc.getMother().isPlayer() ||
-				          (npc.getFather()!=null && npc.getFather().isPlayer()) ||
-						  (npc.getIncubator()!=null && npc.getIncubator().isPlayer()));
+		this.fromPlayer = (npc.getMother()!=null && (npc.getMother().isPlayer() || (npc.getMother().isSlave() && npc.getMother().getOwner().isPlayer()))) ||
+				          (npc.getFather()!=null && (npc.getFather().isPlayer() || (npc.getFather().isSlave() && npc.getFather().getOwner().isPlayer()))) ||
+						  (npc.getIncubator()!=null && npc.getIncubator().isPlayer());
 		this.born = false;
 		this.nameTriplet = npc.getNameTriplet();
 		this.surname = npc.getSurname();
@@ -150,7 +150,9 @@ public class OffspringSeed implements XMLSaving {
 	 * @param fatherHalfDemonSubspecies The half-demon subspecies of the father. Will only be used if the father is null or if prioritiseFatherSubspecies is true.
 	 */
 	public OffspringSeed(GameCharacter mother, GameCharacter father, Body fatherBody) {
-		this.fromPlayer = (mother.isPlayer() || (father!=null && father.isPlayer()));
+		this.fromPlayer = (mother.isPlayer() || mother.isSlaveOwnedByPlayer()) || 
+		 (father!=null && (father.isPlayer() || father.isSlaveOwnedByPlayer()));
+		
 		this.born = false;
 		
 		GenericAndrogynousNPC template = new GenericAndrogynousNPC();

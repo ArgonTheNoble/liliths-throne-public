@@ -27,7 +27,10 @@ public enum Relationship {
     Cousin("cousin", 2),
     Pibling("aunt", "uncle", "pibling", 1.5),
     GrandPibling("grand-aunt", "grand-uncle", "grand-pibling", 2.5),
-    Nibling("niece", "nephew", "nibling", 1.5);
+    Nibling("niece", "nephew", "nibling", 1.5),
+
+    Master("mistress", "master", "master", 3),
+    SlaveChild("slave-daughter", "slave-son", "slave-child", 3);
 
     private final String displayF;
     private final String displayM;

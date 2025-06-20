@@ -4495,6 +4495,9 @@ public abstract class GameCharacter implements XMLSaving {
 				
 			} else if (petName.equalsIgnoreCase("Mommy") || petName.equalsIgnoreCase("Daddy")) {
 				return target.isFeminine()?"mommy":"daddy";
+
+			} else if (petName.equalsIgnoreCase("Mother") || petName.equalsIgnoreCase("Father")) {
+				return target.isFeminine()?"mother":"father";
 				
 			} else if (petName.equalsIgnoreCase("Mistress") || petName.equalsIgnoreCase("Master")) {
 				return target.isFeminine()?"Mistress":"Master";
@@ -5750,6 +5753,10 @@ public abstract class GameCharacter implements XMLSaving {
 		return !getOwnerId().isEmpty();
 	}
 
+	public boolean isSlaveOwnedByPlayer() {
+		return this.isSlave() && (this.getOwner() == null ? false : this.getOwner().isPlayer());
+	}
+
 	public boolean isCaptive() {
 		if(this.isSubordinateInParty()) {
 			if(this.getPartyLeader().isCaptive()) {
@@ -6305,6 +6312,22 @@ public abstract class GameCharacter implements XMLSaving {
         if(this.getParents(2, null).contains(character)) {
             result.add(Relationship.GrandGrandChild);
         }
+
+		if(character.isPlayer()) {
+			if(this.getMother() != null && this.getMother().isSlaveOwnedByPlayer()) {
+				result.add(Relationship.SlaveChild);
+			} else if(this.getFather() != null && this.getFather().isSlaveOwnedByPlayer()) {
+				result.add(Relationship.SlaveChild);
+			}
+		}
+		if(this.isPlayer()) {
+			if(character.getMother() != null && character.getMother().isSlaveOwnedByPlayer()) {
+				result.add(Relationship.Master);
+			} else if(character.getFather() != null && character.getFather().isSlaveOwnedByPlayer()) {
+				result.add(Relationship.Master);
+			}
+		}
+
 //        if(character.getChildren(0, null).contains(this))
 //            result.add(Relationship.Child);
 //        if(character.getChildren(1, null).contains(this))
@@ -21161,7 +21184,8 @@ public abstract class GameCharacter implements XMLSaving {
 //				this.setVirginityLoss(sexType, this, "while giving birth");
 //			}
 
-			if((birthedLitter.getFather()!=null && birthedLitter.getFather().isPlayer()) || (birthedLitter.getMother()!=null && birthedLitter.getMother().isPlayer())) {
+			if((birthedLitter.getFather()!=null && (birthedLitter.getFather().isPlayer() || birthedLitter.getFather().isSlaveOwnedByPlayer()))
+					 || (birthedLitter.getMother()!=null && (birthedLitter.getMother().isPlayer() || birthedLitter.getMother().isSlaveOwnedByPlayer()))) {
 				for(String id: birthedLitter.getOffspring()) {
 					if(id.contains("NPCOffspring")) { // If the offspring is from the pre-offspring seed PR, handle them in the old way:
 						try {
@@ -21193,11 +21217,13 @@ public abstract class GameCharacter implements XMLSaving {
 			
 			// Remove offspring if not related to the player:
 			if(!this.isPlayer() && (birthedLitter.getFather()==null || !birthedLitter.getFather().isPlayer())) {
-				for(String os : birthedLitter.getOffspring()) {
-					if(os.contains("NPCOffspring")) {
-						Main.game.banishNPC(os);
-					} else {
-						Main.game.removeOffspringSeed(os);
+				if(!this.isSlaveOwnedByPlayer() && !(birthedLitter.getFather()!=null && birthedLitter.getFather().isSlaveOwnedByPlayer())) {
+					for(String os : birthedLitter.getOffspring()) {
+						if(os.contains("NPCOffspring")) {
+							Main.game.banishNPC(os);
+						} else {
+							Main.game.removeOffspringSeed(os);
+						}
 					}
 				}
 			}
@@ -21327,8 +21353,8 @@ public abstract class GameCharacter implements XMLSaving {
 				this.removeDirtySlot(slot, true);
 			}
 
-			if((birthedLitter.getFather()!=null && birthedLitter.getFather().isPlayer())
-					|| (birthedLitter.getMother()!=null && birthedLitter.getMother().isPlayer())
+			if((birthedLitter.getFather()!=null && (birthedLitter.getFather().isPlayer() || birthedLitter.getFather().isSlaveOwnedByPlayer()))
+					|| (birthedLitter.getMother()!=null && (birthedLitter.getMother().isPlayer() || birthedLitter.getMother().isSlaveOwnedByPlayer()))
 					|| birthedLitter.getIncubator().isPlayer()) {
 				for(String id: birthedLitter.getOffspring()) {
 					try {
@@ -21353,8 +21379,8 @@ public abstract class GameCharacter implements XMLSaving {
 			
 			// Remove offspring if not related to the player:
 			if(!this.isPlayer()
-					&& (birthedLitter.getMother()==null || !birthedLitter.getMother().isPlayer())
-					&& (birthedLitter.getFather()==null || !birthedLitter.getFather().isPlayer())) {
+					&& (birthedLitter.getMother()==null || (!birthedLitter.getMother().isPlayer() && birthedLitter.getMother().isSlaveOwnedByPlayer()))
+					&& (birthedLitter.getFather()==null || (!birthedLitter.getFather().isPlayer() && birthedLitter.getMother().isSlaveOwnedByPlayer()))) {
 				for(String os : birthedLitter.getOffspring()) {
 					Main.game.removeOffspringSeed(os);
 				}
