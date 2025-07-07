@@ -2257,6 +2257,7 @@ public class Game implements XMLSaving {
 	public void initNewGame(DialogueNode startingDialogueNode) {
 		NPCMap.clear();
 		OffspringSeedMap.clear();
+		setStarted(false);
 		initUniqueNPCs();
 
 		// This is due to the fact that on new world creation, the player is placed at coordinates (0, 0), which reveals the three squares at the bottom left corner of the map:
@@ -2264,7 +2265,7 @@ public class Game implements XMLSaving {
 		Main.game.getActiveWorld().getCell(0, 1).setDiscovered(false);
 		Main.game.getActiveWorld().getCell(1, 0).setDiscovered(false);
 		
-		setStarted(false);
+		//setStarted(false);
 		
 		SlaverAlleyDialogue.dailyReset();
 		
@@ -6165,6 +6166,14 @@ public class Game implements XMLSaving {
 	}
 
 	public boolean isSpittingDisabled() {
+		if(Main.game.isStarted() 
+			&& !Main.game.getCurrentDialogueNode().equals(OptionsDialogue.GAMEPLAY)
+			&& player != null 
+			&& getNonCompanionCharactersPresent().size() > 0) {
+				if(player.getAttributeValue(Attribute.MAJOR_PHYSIQUE) < getNonCompanionCharactersPresent().get(0).getAttributeValue(Attribute.MAJOR_PHYSIQUE)) {
+					return true;
+				}
+		}
 		return !Main.getProperties().hasValue(PropertyValue.spittingEnabled);
 	}
 	

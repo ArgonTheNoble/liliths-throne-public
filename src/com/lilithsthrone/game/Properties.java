@@ -525,6 +525,7 @@ public class Properties {
 				value.setValue(String.valueOf(genderPreferencesMap.get(g).intValue()));
 				element.setAttributeNode(value);
 			}
+			createXMLElementWithValue(doc, genderPreferences, "offspringGenderLevel", String.valueOf(offspringGenderLevel));
 
 			// Sexual orientation preferences:
 			Element orientationPreferences = doc.createElement("orientationPreferences");
@@ -1146,6 +1147,9 @@ public class Properties {
 							System.err.println("loadPropertiesFromXML() error: genderPreferences preference");
 						}
 					}
+				}
+				if(element.getElementsByTagName("offspringGenderLevel").item(0)!=null) {
+					offspringGenderLevel = Integer.valueOf(((Element)element.getElementsByTagName("offspringGenderLevel").item(0)).getAttribute("value"));
 				}
 
 				// Age preferences:

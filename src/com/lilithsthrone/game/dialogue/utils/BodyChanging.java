@@ -386,6 +386,17 @@ public class BodyChanging {
 						break;
 				}
 			}
+		} else if (isSelfTFMenu()) {
+			for (AbstractRace race : allRaces) {
+				int priority = 0;
+				if(target.getSubspeciesOverride() != null) {
+					priority = target.getSubspeciesOverride().getSubspeciesOverridePriority();
+				}
+				if (race!=Race.NONE && Main.getProperties().isRaceDiscovered(AbstractSubspecies.getMainSubspeciesOfRace(race))
+					&& (priority > 0 ? (AbstractSubspecies.getMainSubspeciesOfRace(race).getSubspeciesOverridePriority() < priority) : false)) {
+					allowedRaces.add(race);
+				}
+			}
 		}
 		allowedRaces.add(Race.NONE);
 		

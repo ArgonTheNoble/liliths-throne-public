@@ -2041,19 +2041,19 @@ public abstract class NPC extends GameCharacter implements XMLSaving {
 				//if(possibleEffects.size()>=numberOfTransformations) { return new TransformativePotion(itemType, possibleEffects, body); }
 				
 		} else if(target.getBreastSize().getMeasurement()>0) {
-			if(target.getBreastSize().getMeasurement() >= body.getBreast().getSize().getMeasurement() - 3) {
+			if(target.getBreastSize().getMeasurement() >= body.getBreast().getSize().getMeasurement() + 3) {
 				possibleEffects.add(new PossibleItemEffect(
 						new ItemEffect(itemType.getEnchantmentEffect(), TFModifier.TF_BREASTS, TFModifier.TF_MOD_SIZE, TFPotency.MAJOR_DRAIN, 1),
 						"Your breasts are far too big!"));
 					//if(possibleEffects.size()>=numberOfTransformations) { return new TransformativePotion(itemType, possibleEffects, body); }
 					
-			} else if(target.getBreastSize().getMeasurement() >= body.getBreast().getSize().getMeasurement() - 2) {
+			} else if(target.getBreastSize().getMeasurement() >= body.getBreast().getSize().getMeasurement() + 2) {
 				possibleEffects.add(new PossibleItemEffect(
 						new ItemEffect(itemType.getEnchantmentEffect(), TFModifier.TF_BREASTS, TFModifier.TF_MOD_SIZE, TFPotency.DRAIN, 1),
 						"Your breasts are too big!"));
 					//if(possibleEffects.size()>=numberOfTransformations) { return new TransformativePotion(itemType, possibleEffects, body); }
 					
-			} else if(target.getBreastSize().getMeasurement() >= body.getBreast().getSize().getMeasurement() - 1) {
+			} else if(target.getBreastSize().getMeasurement() >= body.getBreast().getSize().getMeasurement() + 1) {
 				possibleEffects.add(new PossibleItemEffect(
 						new ItemEffect(itemType.getEnchantmentEffect(), TFModifier.TF_BREASTS, TFModifier.TF_MOD_SIZE, TFPotency.MINOR_DRAIN, 1),
 						"Your breasts are a little too big!"));
@@ -2083,19 +2083,19 @@ public abstract class NPC extends GameCharacter implements XMLSaving {
 					//if(possibleEffects.size()>=numberOfTransformations) { return new TransformativePotion(itemType, possibleEffects, body); }
 					
 			} else if(target.getBreastCrotchSize().getMeasurement()>0) {
-				if(target.getBreastCrotchSize().getMeasurement() >= body.getBreastCrotch().getSize().getMeasurement() - 3) {
+				if(target.getBreastCrotchSize().getMeasurement() >= body.getBreastCrotch().getSize().getMeasurement() + 3) {
 					possibleEffects.add(new PossibleItemEffect(
 							new ItemEffect(itemType.getEnchantmentEffect(), TFModifier.TF_BREASTS_CROTCH, TFModifier.TF_MOD_SIZE, TFPotency.MAJOR_DRAIN, 1),
 							"Your crotch-boobs are far too big!"));
 						//if(possibleEffects.size()>=numberOfTransformations) { return new TransformativePotion(itemType, possibleEffects, body); }
 						
-				} else if(target.getBreastCrotchSize().getMeasurement() >= body.getBreastCrotch().getSize().getMeasurement() - 2) {
+				} else if(target.getBreastCrotchSize().getMeasurement() >= body.getBreastCrotch().getSize().getMeasurement() + 2) {
 					possibleEffects.add(new PossibleItemEffect(
 							new ItemEffect(itemType.getEnchantmentEffect(), TFModifier.TF_BREASTS_CROTCH, TFModifier.TF_MOD_SIZE, TFPotency.DRAIN, 1),
 							"Your crotch-boobs are too big!"));
 						//if(possibleEffects.size()>=numberOfTransformations) { return new TransformativePotion(itemType, possibleEffects, body); }
 						
-				} else if(target.getBreastCrotchSize().getMeasurement() >= body.getBreastCrotch().getSize().getMeasurement() - 1) {
+				} else if(target.getBreastCrotchSize().getMeasurement() >= body.getBreastCrotch().getSize().getMeasurement() + 1) {
 					possibleEffects.add(new PossibleItemEffect(
 							new ItemEffect(itemType.getEnchantmentEffect(), TFModifier.TF_BREASTS_CROTCH, TFModifier.TF_MOD_SIZE, TFPotency.MINOR_DRAIN, 1),
 							"Your crotch-boobs are a little too big!"));
@@ -2344,12 +2344,28 @@ public abstract class NPC extends GameCharacter implements XMLSaving {
 						new ItemEffect(itemType.getEnchantmentEffect(), TFModifier.TF_CORE, TFModifier.TF_MOD_FERAL, 
 							(this.feralPreference ? TFPotency.MINOR_BOOST : TFPotency.MINOR_DRAIN), 1),
 					"You're all mine now..."));
-			} else if(!target.isFeral() && target.getFetishDesire(Fetish.FETISH_TRANSFORMATION_RECEIVING).isPositive()) {
+			}
+			// } else if(!target.isFeral() && target.getFetishDesire(Fetish.FETISH_TRANSFORMATION_RECEIVING).isPositive()) {
+			// 	actualEffects.clear();
+			// 	actualEffects.add(new PossibleItemEffect(
+			// 			new ItemEffect(itemType.getEnchantmentEffect(), TFModifier.NONE, TFModifier.NONE, 
+			// 			TFPotency.MINOR_BOOST, 1), "You're all mine now..."));
+			// }
+		} 
+		if(actualEffects.size() == 1) {
+			ItemEffect e = actualEffects.get(0).getEffect();
+			if(e.getPrimaryModifier() == TFModifier.TF_BREASTS && e.getSecondaryModifier() == TFModifier.TF_MOD_SIZE) {
 				actualEffects.clear();
 				actualEffects.add(new PossibleItemEffect(
-						new ItemEffect(itemType.getEnchantmentEffect(), TFModifier.NONE, TFModifier.NONE, 
-						TFPotency.MINOR_BOOST, 1), "You're all mine now..."));
+						new ItemEffect(itemType.getEnchantmentEffect(), TFModifier.TF_BREASTS, TFModifier.TF_MOD_SIZE, 
+							TFPotency.MINOR_BOOST, 1),
+					"Let's mix it up a little!"));
 			}
+		} else if(actualEffects.isEmpty()) {
+			actualEffects.add(new PossibleItemEffect(
+						new ItemEffect(itemType.getEnchantmentEffect(), TFModifier.TF_BREASTS, TFModifier.TF_MOD_SIZE, 
+							TFPotency.MINOR_BOOST, 1),
+					"Let's mix it up a little!"));
 		}
 		
 
