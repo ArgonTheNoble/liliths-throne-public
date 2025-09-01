@@ -223,7 +223,7 @@
 		<region rarity="ZERO_EXTREMELY_RARE">VOLCANO</region>
 		<region rarity="ZERO_EXTREMELY_RARE">DESERT</region>
 		<region rarity="ZERO_EXTREMELY_RARE">MOUNTAINS</region>
-		<region rarity="ONE_VERY_RARE">DOMINION</region>
+		<region rarity="TWO_RARE">DOMINION</region>
 		<region rarity="THREE_UNCOMMON">FIELD_CITY</region>
 	</regionLocations>
 	

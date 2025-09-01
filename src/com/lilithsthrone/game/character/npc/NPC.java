@@ -1462,9 +1462,9 @@ public abstract class NPC extends GameCharacter implements XMLSaving {
 		StringBuilder sb = new StringBuilder();
 		
 		if(potion!=null && forcedTF && potion.getEffects().size() > 0) {
-			System.out.println("EffectsSize: "+potion.getEffects().size());
-			System.out.println("First: " + potion.getEffects().get(0).getEffect().getPrimaryModifier() + " " + potion.getEffects().get(0).getEffect().getSecondaryModifier());
-			System.out.println("Msg: " + potion.getEffects().get(0).getMessage());
+			// System.out.println("EffectsSize: "+potion.getEffects().size());
+			// System.out.println("First: " + potion.getEffects().get(0).getEffect().getPrimaryModifier() + " " + potion.getEffects().get(0).getEffect().getSecondaryModifier());
+			// System.out.println("Msg: " + potion.getEffects().get(0).getMessage());
 			if(potion.getEffects().size() >= 1 
 				&& potion.getEffects().get(0).getEffect().getPrimaryModifier() == TFModifier.NONE
 				&& potion.getEffects().get(0).getEffect().getSecondaryModifier() == TFModifier.NONE) {
@@ -1534,6 +1534,76 @@ public abstract class NPC extends GameCharacter implements XMLSaving {
 		}
 		return itemType.getEnchantmentEffect();
 	} 
+
+	private PossibleItemEffect pullPossibleEffect(List<PossibleItemEffect> items) {
+		return pullPossibleEffect(items, true, -1);
+	}	
+
+	private PossibleItemEffect pullPossibleEffect(List<PossibleItemEffect> items, boolean removeResult, int totalWeight) {
+		if(items.size() == 0) {
+			return null;
+		} else if(items.size() == 1) {
+			return items.get(0);
+		}
+
+		if(totalWeight < 0) {
+			totalWeight = 0;
+			for(PossibleItemEffect e : items) {
+				totalWeight += Math.max(e.getChance(), 1);
+			}
+		}
+
+		if(totalWeight > 0) {
+			int r = Util.random.nextInt(totalWeight);
+			int i = 0;
+			//System.err.println("Getting random weighted item... totalWeight: " + totalWeight + ", items.size: " + items.size() + ", r: " + r);
+			while(totalWeight > 0 && i < items.size()) {
+				int c = Math.max(items.get(i).getChance(), 1);
+				if(totalWeight - c <= r) {
+					PossibleItemEffect result = items.get(i);
+					if(removeResult)
+						items.remove(i);
+					return result;
+				} else {
+					totalWeight -= c;
+					i++;
+				}
+			}
+		} else {
+			int i = Util.random.nextInt(items.size());
+			PossibleItemEffect result = items.get(i);
+			if(removeResult)
+				items.remove(i);
+			return result;
+		}
+		return null;
+	}
+
+	private List<PossibleItemEffect> pullSomeEffects(List<PossibleItemEffect> itemList, int num) {
+		List<PossibleItemEffect> items = new ArrayList<>(itemList);
+		if(num >= items.size())
+			return items;
+
+		int totalWeight = 0;
+		for(PossibleItemEffect e : items) {
+			totalWeight += Math.max(e.getChance(), 1);
+		}
+
+		List<PossibleItemEffect> results = new ArrayList<>();
+		PossibleItemEffect e;
+		while(num > 0 && !items.isEmpty()) {
+			e = pullPossibleEffect(items, true, totalWeight);
+			if(e != null) {
+				results.add(e);
+				num--;
+				totalWeight -= Math.max(e.getChance(), 1);
+			} else {
+				System.err.println("Tried to add null effect! totalWeight: " + totalWeight + ", items.size: " + items.size());
+				num--;
+			}
+		}
+		return results;
+	}
 
 	public TransformativePotion generateTransformativePotion(GameCharacter target) {
 		List<PossibleItemEffect> possibleEffects = new ArrayList<>();
@@ -1656,7 +1726,7 @@ public abstract class NPC extends GameCharacter implements XMLSaving {
 			if(target.hasVagina() && body.hasVagina() && !vaginaSet) {
 				possibleEffects.add(new PossibleItemEffect(
 					new ItemEffect(getItemEnchantmentEffect(genitalsItemType, body.getVagina()), TFModifier.TF_VAGINA, TFModifier.NONE, TFPotency.MINOR_BOOST, 1),
-					"Let's give you a nice "+(humanGenitals?"human":body.getVagina().getType().getTransformName())+" pussy!"));
+					"Let's give you a nice "+(humanGenitals?"human":body.getVagina().getType().getTransformName())+" pussy!", 5));
 			}
 			
 			/*
@@ -1678,57 +1748,57 @@ public abstract class NPC extends GameCharacter implements XMLSaving {
 			if(target.hasPenisIgnoreDildo() && body.hasPenisIgnoreDildo() && !penisSet) {
 				possibleEffects.add(new PossibleItemEffect(
 					new ItemEffect(getItemEnchantmentEffect(genitalsItemType, body.getPenis()), TFModifier.TF_PENIS, TFModifier.NONE, TFPotency.MINOR_BOOST, 1),
-					"Let's give you a nice "+(humanGenitals?"human":body.getPenis().getType().getTransformName())+" cock!"));
+					"Let's give you a nice "+(humanGenitals?"human":body.getPenis().getType().getTransformName())+" cock!", 5));
 			}
 		}
 		
 		// All minor part transformations:
 		if(Main.getProperties().getForcedTFPreference()!=FurryPreference.HUMAN && !cannotTransformPreference) {
-			if(possibleEffects.isEmpty() || Math.random()>0.33f) {
+			//if(possibleEffects.isEmpty() || Math.random()>0.33f) {
 				if(target.getAntennaType() != body.getAntenna().getType()) {
 					possibleEffects.add(new PossibleItemEffect(
 						new ItemEffect(getItemEnchantmentEffect(itemType, body.getAntenna()), TFModifier.TF_ANTENNA, body.getAntenna().getType().getTFModifier(), TFPotency.MINOR_BOOST, 1),
 						body.getAntenna().getType()==AntennaType.NONE
 							?UtilText.parse(target, "I don't want you having those [npc.antennae] anymore!")
-							:"Time to give you some antennae!"));//TODO
+							:"Time to give you some antennae!", 3));//TODO
 					//if(possibleEffects.size()>=numberOfTransformations) { return new TransformativePotion(itemType, possibleEffects, body); }
 				}
 				if(Main.getProperties().getForcedTFPreference() != FurryPreference.MINIMUM) {
 					if(target.getAssType() != body.getAss().getType()) {
 						possibleEffects.add(new PossibleItemEffect(
 							new ItemEffect(getItemEnchantmentEffect(itemType, body.getAss()), TFModifier.TF_ASS, TFModifier.NONE, TFPotency.MINOR_BOOST, 1),
-							"Let's transform your ass!"));
+							"Let's transform your ass!", 4));
 						//if(possibleEffects.size()>=numberOfTransformations) { return new TransformativePotion(itemType, possibleEffects, body); }
 					}
 					if(target.getBreastType() != body.getBreast().getType()) {
 						possibleEffects.add(new PossibleItemEffect(
 							new ItemEffect(getItemEnchantmentEffect(itemType, body.getBreast()), TFModifier.TF_BREASTS, TFModifier.NONE, TFPotency.MINOR_BOOST, 1),
-							"Your breasts need to be transformed as well!"));
+							"Your breasts need to be transformed as well!", 4));
 						//if(possibleEffects.size()>=numberOfTransformations) { return new TransformativePotion(itemType, possibleEffects, body); }
 					}
 					if(applyingCrotchBoobTF && target.getBreastCrotchType() != body.getBreastCrotch().getType() && body.getBreastCrotch().getType()!=BreastType.NONE) {
 						possibleEffects.add(new PossibleItemEffect(
 							new ItemEffect(getItemEnchantmentEffect(itemType, body.getBreastCrotch()), TFModifier.TF_BREASTS_CROTCH, TFModifier.NONE, TFPotency.MINOR_BOOST, 1),
-							"You need some new crotch-boobs!"));
+							"You need some new crotch-boobs!", 4));
 						//if(possibleEffects.size()>=numberOfTransformations) { return new TransformativePotion(itemType, possibleEffects, body); }
 					}
 				}
 				if(target.getEarType() != body.getEar().getType()) {
 					possibleEffects.add(new PossibleItemEffect(
 						new ItemEffect(getItemEnchantmentEffect(itemType, body.getEar()), TFModifier.TF_EARS, body.getEar().getType().getTFModifier(), TFPotency.MINOR_BOOST, 1),
-						"Your ears could use some improvement!"));
+						"Your ears could use some improvement!", 7));
 					//if(possibleEffects.size()>=numberOfTransformations) { return new TransformativePotion(itemType, possibleEffects, body); }
 				}
 				if(target.getEyeType() != body.getEye().getType()) {
 					possibleEffects.add(new PossibleItemEffect(
 						new ItemEffect(getItemEnchantmentEffect(itemType, body.getEye()), TFModifier.TF_EYES, body.getEye().getType().getTFModifier(), TFPotency.MINOR_BOOST, 1),
-						"Now for your eyes to be transformed!"));
+						"Now for your eyes to be transformed!", 6));
 					//if(possibleEffects.size()>=numberOfTransformations) { return new TransformativePotion(itemType, possibleEffects, body); }
 				}
 				if(target.getHairType() != body.getHair().getType()) {
 					possibleEffects.add(new PossibleItemEffect(
 						new ItemEffect(getItemEnchantmentEffect(itemType, body.getHair()), TFModifier.TF_HAIR, body.getHair().getType().getTFModifier(), TFPotency.MINOR_BOOST, 1),
-						"This might tingle a little!"));
+						"This might tingle a little!", 5));
 					//if(possibleEffects.size()>=numberOfTransformations) { return new TransformativePotion(itemType, possibleEffects, body); }
 				}
 				if(target.getHornType() != body.getHorn().getType()) {
@@ -1736,18 +1806,18 @@ public abstract class NPC extends GameCharacter implements XMLSaving {
 						new ItemEffect(getItemEnchantmentEffect(itemType, body.getHorn()), TFModifier.TF_HORNS, body.getHorn().getType().getTFModifier(), TFPotency.MINOR_BOOST, 1),
 						body.getHorn().getType()==HornType.NONE
 							?"Let's get rid of those horns of yours..."
-							:"Ready to grow some new horns?"));
+							:"Ready to grow some new horns?", 3));
 					//if(possibleEffects.size()>=numberOfTransformations) { return new TransformativePotion(itemType, possibleEffects, body); }
 				} else if (target.getHornType() != HornType.NONE) {
 					if(target.getHornLengthValue() + 3 < body.getHorn().getHornLengthValue()) {
 						possibleEffects.add(new PossibleItemEffect(
 							new ItemEffect(itemType.getEnchantmentEffect(), TFModifier.TF_HORNS, TFModifier.TF_MOD_SIZE, TFPotency.BOOST, 1),
-							"Let's make your horn" + ((target.getHornsPerRow() * target.getHornRows()) > 1 ? "s" : "") + " longer!"));
+							"Let's make your horn" + ((target.getHornsPerRow() * target.getHornRows()) > 1 ? "s" : "") + " longer!", 7));
 						//if(possibleEffects.size()>=numberOfTransformations) { return new TransformativePotion(itemType, possibleEffects, body); }
 					} else if(target.getHornLengthValue() - 3 > body.getHorn().getHornLengthValue()) {
 						possibleEffects.add(new PossibleItemEffect(
 							new ItemEffect(itemType.getEnchantmentEffect(), TFModifier.TF_HORNS, TFModifier.TF_MOD_SIZE, TFPotency.DRAIN, 1),
-							"Let's make your horn" + ((target.getHornsPerRow() * target.getHornRows()) > 1 ? "s" : "") + " shorter!"));
+							"Let's make your horn" + ((target.getHornsPerRow() * target.getHornRows()) > 1 ? "s" : "") + " shorter!", 7));
 						//if(possibleEffects.size()>=numberOfTransformations) { return new TransformativePotion(itemType, possibleEffects, body); }
 					}
 				}
@@ -1758,7 +1828,7 @@ public abstract class NPC extends GameCharacter implements XMLSaving {
 						new ItemEffect(getItemEnchantmentEffect(itemType, body.getTail()), TFModifier.TF_TAIL, body.getTail().getType().getTFModifier(), TFPotency.MINOR_BOOST, 1), 
 						body.getTail().getType()==TailType.NONE
 							?"That tail of yours is only getting in the way!"
-							:"Time to get a new tail!"));
+							:"Time to get a new tail!", 7));
 					//if(possibleEffects.size()>=numberOfTransformations) { return new TransformativePotion(itemType, possibleEffects, body); }
 				}
 				if(target.getWingType() != body.getWing().getType()) {
@@ -1766,55 +1836,56 @@ public abstract class NPC extends GameCharacter implements XMLSaving {
 						new ItemEffect(getItemEnchantmentEffect(itemType, body.getWing()), TFModifier.TF_WINGS, body.getWing().getType().getTFModifier(), TFPotency.MINOR_BOOST, 1),
 						body.getWing().getType()==WingType.NONE
 							?"Let's get rid of those wings of yours..."
-							:"Ready to grow some new wings?"));
+							:"Ready to grow some new wings?", 7));
 					//if(possibleEffects.size()>=numberOfTransformations) { return new TransformativePotion(itemType, possibleEffects, body); }
 				}
-			}
+			//}
 			
 			// Leg & Arm transformations:
 			if(Main.getProperties().getForcedTFPreference() != FurryPreference.MINIMUM) {
-				if(possibleEffects.isEmpty()) {
+				//if(possibleEffects.isEmpty()) {
 					if(target.getArmType() != body.getArm().getType()) {
 						possibleEffects.add(new PossibleItemEffect(
 							new ItemEffect(getItemEnchantmentEffect(itemType, body.getArm()), TFModifier.TF_ARMS, body.getArm().getType().getTFModifier(), TFPotency.MINOR_BOOST, 1),
-							"Your arms could do with a change!"));
+							"Your arms could do with a change!", 5));
 					}
 					// TODO: Add separate chunks for LegConfiguration and LegType if more races have multiple leg types
 					if(target.getLegType() != body.getLeg().getType()) {
 						possibleEffects.add(new PossibleItemEffect(
 							new ItemEffect(getItemEnchantmentEffect(itemType, body.getLeg()), TFModifier.TF_LEGS, body.getLeg().getType().getTFModifier(), TFPotency.MINOR_BOOST, 1),
-							"Your legs need changing as well!"));
+							"Your legs need changing as well!", 5));
 					}
 					if(target.getLegConfiguration() != body.getLeg().getLegConfiguration()) {
 						possibleEffects.add(new PossibleItemEffect(
 							new ItemEffect(getItemEnchantmentEffect(itemType, body.getLeg()), TFModifier.TF_LEGS, body.getLeg().getLegConfiguration().getTFModifier(), TFPotency.MINOR_BOOST, 1),
-							"I want you with "+UtilText.generateSingularDeterminer(body.getLeg().getLegConfiguration().getName())+" "+body.getLeg().getLegConfiguration().getName()+" body!"));
+							"I want you with "+UtilText.generateSingularDeterminer(body.getLeg().getLegConfiguration().getName())+" "+body.getLeg().getLegConfiguration().getName()+" body!", 1));
 					}
 					//if(possibleEffects.size()>=numberOfTransformations) { return new TransformativePotion(itemType, possibleEffects, body); } // Apply arms & legs at the same time
-				}
+				//}
 			}
 			// Face & Skin transformations:
 			if(Main.getProperties().getForcedTFPreference() == FurryPreference.NORMAL || Main.getProperties().getForcedTFPreference() == FurryPreference.MAXIMUM) {
-				if(possibleEffects.isEmpty()) {
+				//if(possibleEffects.isEmpty()) {
 					if(target.getTorsoType() != body.getTorso().getType()) {
 						possibleEffects.add(new PossibleItemEffect(
 							new ItemEffect(getItemEnchantmentEffect(itemType, body.getTorso()), TFModifier.TF_SKIN, body.getTorso().getType().getTFModifier(), TFPotency.MINOR_BOOST, 1),
-							"This is going to be good!"));
+							"This is going to be good!", 2));
 					}
 					if(target.getFaceType() != body.getFace().getType()) {
 						possibleEffects.add(new PossibleItemEffect(
 							new ItemEffect(getItemEnchantmentEffect(itemType, body.getFace()), TFModifier.TF_FACE, body.getFace().getType().getTFModifier(), TFPotency.MINOR_BOOST, 1),
-							"I can't wait to see how you'll look after this!"));
+							"I can't wait to see how you'll look after this!", 2));
 					}
 					//if(possibleEffects.size()>=numberOfTransformations) { return new TransformativePotion(itemType, possibleEffects, body); } // Apply face & skin at the same time
-				}
+				//}
 			}
 		}
 
-		List<PossibleItemEffect> raceEffects = new ArrayList<>();
-		for(int i=0; i < raceTFs && !possibleEffects.isEmpty(); i++) {
-			raceEffects.add(possibleEffects.remove(0));
-		}
+		List<PossibleItemEffect> raceEffects = new ArrayList<>(pullSomeEffects(possibleEffects, raceTFs));
+		// for(int i=0; i < raceTFs && !possibleEffects.isEmpty(); i++) {
+		// 	raceEffects.add(possibleEffects.remove(0));
+		// }
+		//System.err.println("Want " + raceTFs + " race effects, " + possibleEffects.size() + " avail, got " + raceEffects.size());
 		possibleEffects.clear();
 		
 		// Other transformations:
@@ -1847,7 +1918,8 @@ public abstract class NPC extends GameCharacter implements XMLSaving {
 		}
 		
 		// Removing crotch-boobs:
-		if(applyingCrotchBoobTF && target.getBreastCrotchType() != body.getBreastCrotch().getType() && body.getBreastCrotch().getType()==BreastType.NONE && !hasFetish(Fetish.FETISH_BREASTS_OTHERS)) {
+		if(applyingCrotchBoobTF && target.getBreastCrotchType() != body.getBreastCrotch().getType() && body.getBreastCrotch().getType()==BreastType.NONE 
+				&& target.getBreastCrotchRows() <= 1 && !hasFetish(Fetish.FETISH_BREASTS_OTHERS)) {
 			possibleEffects.add(new PossibleItemEffect(
 				new ItemEffect(getItemEnchantmentEffect(itemType, body.getBreastCrotch()), TFModifier.TF_BREASTS_CROTCH, TFModifier.REMOVAL, TFPotency.MINOR_BOOST, 1),
 				"Let's get rid of those filthy crotch-boobs!"));
@@ -1974,7 +2046,7 @@ public abstract class NPC extends GameCharacter implements XMLSaving {
 				pot = TFPotency.MAJOR_BOOST;
 			possibleEffects.add(new PossibleItemEffect(
 				new ItemEffect(itemType.getEnchantmentEffect(), TFModifier.TF_CORE, TFModifier.TF_MOD_FEMININITY, pot, 1),
-				"I'm gonna need you to be more feminine!"));
+				"I'm gonna need you to be more feminine!", 4));
 		} else if(target.getFemininityValue() > body.getFemininity()) {
 			TFPotency pot = TFPotency.MINOR_DRAIN;
 			if(target.getFemininityValue() - body.getFemininity() > 4)
@@ -1983,7 +2055,7 @@ public abstract class NPC extends GameCharacter implements XMLSaving {
 				pot = TFPotency.MAJOR_DRAIN;
 			possibleEffects.add(new PossibleItemEffect(
 				new ItemEffect(itemType.getEnchantmentEffect(), TFModifier.TF_CORE, TFModifier.TF_MOD_FEMININITY, pot, 1),
-				"I'm gonna need you to be more of a man!"));
+				"I'm gonna need you to be more of a man!", 4));
 		}
 
 		if(target.getFemininity() == Femininity.valueOf(body.getFemininity())) {
@@ -2013,10 +2085,11 @@ public abstract class NPC extends GameCharacter implements XMLSaving {
 			
 		} 
 
-		List<PossibleItemEffect> bodyEffects = new ArrayList<>();
-		for(int i=0; i < bodyTFs && !possibleEffects.isEmpty(); i++) {
-			bodyEffects.add(possibleEffects.remove(Util.random.nextInt(possibleEffects.size())));
-		}
+		List<PossibleItemEffect> bodyEffects = new ArrayList<>(pullSomeEffects(possibleEffects, bodyTFs));
+		// for(int i=0; i < bodyTFs && !possibleEffects.isEmpty(); i++) {
+		// 	bodyEffects.add(possibleEffects.remove(Util.random.nextInt(possibleEffects.size())));
+		// }
+		//System.err.println("Want " + bodyTFs + " body effects, " + possibleEffects.size() + " avail, got " + bodyEffects.size());
 		possibleEffects.clear();
 
 		//--- BREASTS ---//
@@ -2064,54 +2137,63 @@ public abstract class NPC extends GameCharacter implements XMLSaving {
 		//--- CROTCH-BOOBS---//
 		
 		if(applyingCrotchBoobTF && body.getBreastCrotch().getType()!=BreastType.NONE) {
-			if(target.getBreastCrotchSize().getMeasurement() + 3 <= body.getBreastCrotch().getSize().getMeasurement()) {
-				possibleEffects.add(new PossibleItemEffect(
-						new ItemEffect(itemType.getEnchantmentEffect(), TFModifier.TF_BREASTS_CROTCH, TFModifier.TF_MOD_SIZE, TFPotency.MAJOR_BOOST, 1),
-						"Your crotch-boobs need to be a lot bigger!"));
-					//if(possibleEffects.size()>=numberOfTransformations) { return new TransformativePotion(itemType, possibleEffects, body); }
-				
-			} else if(target.getBreastCrotchSize().getMeasurement() + 2 <= body.getBreastCrotch().getSize().getMeasurement()) {
-				possibleEffects.add(new PossibleItemEffect(
-						new ItemEffect(itemType.getEnchantmentEffect(), TFModifier.TF_BREASTS_CROTCH, TFModifier.TF_MOD_SIZE, TFPotency.BOOST, 1),
-						"Your crotch-boobs need to be bigger!"));
-					//if(possibleEffects.size()>=numberOfTransformations) { return new TransformativePotion(itemType, possibleEffects, body); }
-					
-			} else if(target.getBreastCrotchSize().getMeasurement() + 1 <= body.getBreastCrotch().getSize().getMeasurement()) {
-				possibleEffects.add(new PossibleItemEffect(
-						new ItemEffect(itemType.getEnchantmentEffect(), TFModifier.TF_BREASTS_CROTCH, TFModifier.TF_MOD_SIZE, TFPotency.MINOR_BOOST, 1),
-						"Your crotch-boobs need to be a little bigger!"));
-					//if(possibleEffects.size()>=numberOfTransformations) { return new TransformativePotion(itemType, possibleEffects, body); }
-					
-			} else if(target.getBreastCrotchSize().getMeasurement()>0) {
-				if(target.getBreastCrotchSize().getMeasurement() >= body.getBreastCrotch().getSize().getMeasurement() + 3) {
+			if(target.hasBreastsCrotch()) {
+				if(target.getBreastCrotchSize().getMeasurement() + 3 <= body.getBreastCrotch().getSize().getMeasurement()) {
 					possibleEffects.add(new PossibleItemEffect(
-							new ItemEffect(itemType.getEnchantmentEffect(), TFModifier.TF_BREASTS_CROTCH, TFModifier.TF_MOD_SIZE, TFPotency.MAJOR_DRAIN, 1),
-							"Your crotch-boobs are far too big!"));
+							new ItemEffect(itemType.getEnchantmentEffect(), TFModifier.TF_BREASTS_CROTCH, TFModifier.TF_MOD_SIZE, TFPotency.MAJOR_BOOST, 1),
+							"Your crotch-boobs need to be a lot bigger!"));
+						//if(possibleEffects.size()>=numberOfTransformations) { return new TransformativePotion(itemType, possibleEffects, body); }
+					
+				} else if(target.getBreastCrotchSize().getMeasurement() + 2 <= body.getBreastCrotch().getSize().getMeasurement()) {
+					possibleEffects.add(new PossibleItemEffect(
+							new ItemEffect(itemType.getEnchantmentEffect(), TFModifier.TF_BREASTS_CROTCH, TFModifier.TF_MOD_SIZE, TFPotency.BOOST, 1),
+							"Your crotch-boobs need to be bigger!"));
 						//if(possibleEffects.size()>=numberOfTransformations) { return new TransformativePotion(itemType, possibleEffects, body); }
 						
-				} else if(target.getBreastCrotchSize().getMeasurement() >= body.getBreastCrotch().getSize().getMeasurement() + 2) {
+				} else if(target.getBreastCrotchSize().getMeasurement() + 1 <= body.getBreastCrotch().getSize().getMeasurement()) {
 					possibleEffects.add(new PossibleItemEffect(
-							new ItemEffect(itemType.getEnchantmentEffect(), TFModifier.TF_BREASTS_CROTCH, TFModifier.TF_MOD_SIZE, TFPotency.DRAIN, 1),
-							"Your crotch-boobs are too big!"));
+							new ItemEffect(itemType.getEnchantmentEffect(), TFModifier.TF_BREASTS_CROTCH, TFModifier.TF_MOD_SIZE, TFPotency.MINOR_BOOST, 1),
+							"Your crotch-boobs need to be a little bigger!"));
 						//if(possibleEffects.size()>=numberOfTransformations) { return new TransformativePotion(itemType, possibleEffects, body); }
 						
-				} else if(target.getBreastCrotchSize().getMeasurement() >= body.getBreastCrotch().getSize().getMeasurement() + 1) {
-					possibleEffects.add(new PossibleItemEffect(
-							new ItemEffect(itemType.getEnchantmentEffect(), TFModifier.TF_BREASTS_CROTCH, TFModifier.TF_MOD_SIZE, TFPotency.MINOR_DRAIN, 1),
-							"Your crotch-boobs are a little too big!"));
-						//if(possibleEffects.size()>=numberOfTransformations) { return new TransformativePotion(itemType, possibleEffects, body); }
+				} else if(target.getBreastCrotchSize().getMeasurement()>0) {
+					if(target.getBreastCrotchSize().getMeasurement() >= body.getBreastCrotch().getSize().getMeasurement() + 3) {
+						possibleEffects.add(new PossibleItemEffect(
+								new ItemEffect(itemType.getEnchantmentEffect(), TFModifier.TF_BREASTS_CROTCH, TFModifier.TF_MOD_SIZE, TFPotency.MAJOR_DRAIN, 1),
+								"Your crotch-boobs are far too big!"));
+							//if(possibleEffects.size()>=numberOfTransformations) { return new TransformativePotion(itemType, possibleEffects, body); }
+							
+					} else if(target.getBreastCrotchSize().getMeasurement() >= body.getBreastCrotch().getSize().getMeasurement() + 2) {
+						possibleEffects.add(new PossibleItemEffect(
+								new ItemEffect(itemType.getEnchantmentEffect(), TFModifier.TF_BREASTS_CROTCH, TFModifier.TF_MOD_SIZE, TFPotency.DRAIN, 1),
+								"Your crotch-boobs are too big!"));
+							//if(possibleEffects.size()>=numberOfTransformations) { return new TransformativePotion(itemType, possibleEffects, body); }
+							
+					} else if(target.getBreastCrotchSize().getMeasurement() >= body.getBreastCrotch().getSize().getMeasurement() + 1) {
+						possibleEffects.add(new PossibleItemEffect(
+								new ItemEffect(itemType.getEnchantmentEffect(), TFModifier.TF_BREASTS_CROTCH, TFModifier.TF_MOD_SIZE, TFPotency.MINOR_DRAIN, 1),
+								"Your crotch-boobs are a little too big!"));
+							//if(possibleEffects.size()>=numberOfTransformations) { return new TransformativePotion(itemType, possibleEffects, body); }
+					}
 				}
 			}
-			
 			if(target.getBreastCrotchRows() < body.getBreastCrotch().getRows() && target.getBreastCrotchRows() < BreastCrotch.MAXIMUM_BREAST_ROWS) {
 				possibleEffects.add(new PossibleItemEffect(
 					new ItemEffect(itemType.getEnchantmentEffect(), TFModifier.TF_BREASTS_CROTCH, TFModifier.TF_MOD_COUNT, TFPotency.MINOR_BOOST, 1),
 					"The more, the merrier!"));
-			} else if(target.getBreastCrotchRows() > body.getBreastCrotch().getRows() && target.getBreastCrotchRows() > 1 && !hasFetish(Fetish.FETISH_BREASTS_OTHERS)) {
-				possibleEffects.add(new PossibleItemEffect(
-					new ItemEffect(itemType.getEnchantmentEffect(), TFModifier.TF_BREASTS_CROTCH, TFModifier.TF_MOD_COUNT, TFPotency.MINOR_DRAIN, 1),
-					"Ack! Too many titties!"));
 			}
+			// } else if(target.getBreastCrotchRows() > body.getBreastCrotch().getRows() && target.getBreastCrotchRows() > 1 && !hasFetish(Fetish.FETISH_BREASTS_OTHERS)) {
+			// 	possibleEffects.add(new PossibleItemEffect(
+			// 		new ItemEffect(itemType.getEnchantmentEffect(), TFModifier.TF_BREASTS_CROTCH, TFModifier.TF_MOD_COUNT, TFPotency.MINOR_DRAIN, 1),
+			// 		"Ack! Too many titties!"));
+			// }
+		}
+		if(applyingCrotchBoobTF && target.hasBreastsCrotch() && target.getBreastCrotchRows() > 1 
+				&& (!body.hasBreastsCrotch() || body.getBreastCrotch().getRows() < target.getBreastCrotchRows()) 
+				&& !hasFetish(Fetish.FETISH_BREASTS_OTHERS)) {
+			possibleEffects.add(new PossibleItemEffect(
+				new ItemEffect(itemType.getEnchantmentEffect(), TFModifier.TF_BREASTS_CROTCH, TFModifier.TF_MOD_COUNT, TFPotency.MINOR_DRAIN, 1),
+				"Ack! Too many titties!"));
 		}
 
 		//--- ASS ---//
@@ -2297,10 +2379,11 @@ public abstract class NPC extends GameCharacter implements XMLSaving {
 			}
 		}
 		
-		List<PossibleItemEffect> partEffects = new ArrayList<>();
-		for(int i=0; i < partTFs && !possibleEffects.isEmpty(); i++) {
-			partEffects.add(possibleEffects.remove(Util.random.nextInt(possibleEffects.size())));
-		}
+		List<PossibleItemEffect> partEffects = new ArrayList<>(pullSomeEffects(possibleEffects, partTFs));
+		// for(int i=0; i < partTFs && !possibleEffects.isEmpty(); i++) {
+		// 	partEffects.add(possibleEffects.remove(Util.random.nextInt(possibleEffects.size())));
+		// }
+		//System.err.println("Want " + partTFs + " part effects, " + possibleEffects.size() + " avail, got " + partEffects.size());
 		possibleEffects.clear();
 		
 		List<PossibleItemEffect> actualEffects = new ArrayList<>();

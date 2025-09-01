@@ -235,6 +235,7 @@
 	This can be left blank, but if no 'regionLocations' or 'worldLocations' are defined, then this subspecies will never spawn as a randomly-encountered subspecies. -->
 	<regionLocations>
 		<region rarity="ONE_VERY_RARE">YOUKO_FOREST</region>
+		<region rarity="ONE_VERY_RARE">DOMINION</region>
 	</regionLocations>
 	
 	<!-- The places in which this subspecies can spawn.

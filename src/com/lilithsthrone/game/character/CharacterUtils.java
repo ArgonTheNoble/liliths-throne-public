@@ -341,30 +341,30 @@ public class CharacterUtils {
 					
 				} else {
 					// If one partner is a human, race stage has a 66% chance to be lowered.
-					if((motherHuman && !fatherHuman) || (!motherHuman && fatherHuman)) {
-						if(stage == RaceStage.GREATER) {
-							double rnd = Math.random();
-							if(rnd<0.33) {
-								stage = RaceStage.PARTIAL_FULL;
-							} else if(rnd<0.66) {
-								stage = RaceStage.LESSER;
-							}
+					// if((motherHuman && !fatherHuman) || (!motherHuman && fatherHuman)) {
+					// 	if(stage == RaceStage.GREATER) {
+					// 		double rnd = Math.random();
+					// 		if(rnd<0.33) {
+					// 			stage = RaceStage.PARTIAL_FULL;
+					// 		} else if(rnd<0.66) {
+					// 			stage = RaceStage.LESSER;
+					// 		}
 							
-						} else if(stage == RaceStage.LESSER) {
-							double rnd = Math.random();
-							if(rnd<0.33) {
-								stage = RaceStage.PARTIAL;
-							} else if(rnd<0.66) {
-								stage = RaceStage.PARTIAL_FULL;
-							}
+					// 	} else if(stage == RaceStage.LESSER) {
+					// 		double rnd = Math.random();
+					// 		if(rnd<0.33) {
+					// 			stage = RaceStage.PARTIAL;
+					// 		} else if(rnd<0.66) {
+					// 			stage = RaceStage.PARTIAL_FULL;
+					// 		}
 							
-						} else if(stage == RaceStage.PARTIAL_FULL) {
-							double rnd = Math.random();
-							if(rnd<0.66) {
-								stage = RaceStage.PARTIAL;
-							}
-						}
-					}
+					// 	} else if(stage == RaceStage.PARTIAL_FULL) {
+					// 		double rnd = Math.random();
+					// 		if(rnd<0.66) {
+					// 			stage = RaceStage.PARTIAL;
+					// 		}
+					// 	}
+					// }
 				}
 			}
 			
