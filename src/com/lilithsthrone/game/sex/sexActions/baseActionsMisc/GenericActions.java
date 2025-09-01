@@ -4317,7 +4317,8 @@ public class GenericActions {
 			return GenericActions.getCharacterToBeEgged(Main.sex.getCharacterPerformingAction(), Main.sex.getCharacterTargetedForSexAction(this), SexAreaPenetration.PENIS, getAreaToBeEgged());
 		}
 		private SexAreaInterface getAreaToBeEgged() {
-			return Main.sex.getOngoingSexAreas(Main.sex.getCharacterPerformingAction(), SexAreaPenetration.PENIS, getCharacterToBeEgged()).get(0);
+			return Main.sex.getAllOngoingSexAreas(Main.sex.getCharacterPerformingAction(), SexAreaPenetration.PENIS).get(0);
+//			return Main.sex.getOngoingSexAreas(Main.sex.getCharacterPerformingAction(), SexAreaPenetration.PENIS, getCharacterToBeEgged()).get(0);
 		}
 		@Override
 		public boolean isBaseRequirementsMet() {
@@ -4465,9 +4466,10 @@ public class GenericActions {
 			return "";
 		}
 		@Override
-		public void applyEffects() {
+		public String applyEffectsString() {
+			StringBuilder sb = new StringBuilder();
 			if(Main.sex.getCharacterPerformingAction().isWearingCondom()) {//TODO test appending
-				Main.game.getTextEndStringBuilder().append(UtilText.parse(Main.sex.getCharacterPerformingAction(),
+				sb.append(UtilText.parse(Main.sex.getCharacterPerformingAction(),
 						"<p style='text-align:center;'>[style.boldTerrible([npc.NamePos] condom broke as [npc.she] [npc.was] laying [npc.her] eggs!)]</p>"));
 				Main.sex.getCharacterPerformingAction().getClothingInSlot(InventorySlot.PENIS).setSealed(false);
 				Main.sex.getCharacterPerformingAction().unequipClothingIntoVoid(Main.sex.getCharacterPerformingAction().getClothingInSlot(InventorySlot.PENIS), true, Main.sex.getCharacterPerformingAction());
@@ -4480,13 +4482,15 @@ public class GenericActions {
 			} else if(getAreaToBeEgged()==SexAreaOrifice.VAGINA) {
 				areaEgged = "womb";
 			}
-			Main.game.getTextEndStringBuilder().append(
+			sb.append(
 					"<p style='text-align:center;'>"
 							+ UtilText.parse(getCharacterToBeEgged(),
 									"[style.italicsYellowLight([npc.Name] [npc.has] had "+Util.intToString(eggCount)+" egg"+(eggCount>1?"s":"")+" implanted in [npc.her] "+areaEgged+"!)]")
 					+ "</p>");
 			
 			Main.sex.getCharacterPerformingAction().implantPregnantLitter(getCharacterToBeEgged(), (SexAreaOrifice) getAreaToBeEgged());
+			
+			return sb.toString();
 		}
 		@Override
 		public String applyEndEffects(){
@@ -4613,7 +4617,8 @@ public class GenericActions {
 			return GenericActions.getCharacterToBeEgged(Main.sex.getCharacterPerformingAction(), Main.sex.getCharacterTargetedForSexAction(this), SexAreaPenetration.CLIT, getAreaToBeEgged());
 		}
 		private SexAreaInterface getAreaToBeEgged() {
-			return Main.sex.getOngoingSexAreas(Main.sex.getCharacterPerformingAction(), SexAreaPenetration.CLIT, getCharacterToBeEgged()).get(0);
+			return Main.sex.getAllOngoingSexAreas(Main.sex.getCharacterPerformingAction(), SexAreaPenetration.CLIT).get(0);
+//			return Main.sex.getOngoingSexAreas(Main.sex.getCharacterPerformingAction(), SexAreaPenetration.CLIT, getCharacterToBeEgged()).get(0);
 		}
 		@Override
 		public boolean isBaseRequirementsMet() {
@@ -4763,7 +4768,8 @@ public class GenericActions {
 			return "";
 		}
 		@Override
-		public void applyEffects() {
+		public String applyEffectsString() {
+			StringBuilder sb = new StringBuilder();
 			int eggCount = Main.sex.getCharacterPerformingAction().getPregnantLitter().getTotalLitterCount();
 			String areaEgged = getAreaToBeEgged().getName(getCharacterToBeEgged(), true);
 			if(getAreaToBeEgged()==SexAreaOrifice.ANUS || getAreaToBeEgged()==SexAreaOrifice.MOUTH) {
@@ -4771,13 +4777,14 @@ public class GenericActions {
 			} else if(getAreaToBeEgged()==SexAreaOrifice.VAGINA) {
 				areaEgged = "womb";
 			}
-			Main.game.getTextEndStringBuilder().append(
+			sb.append(
 					"<p style='text-align:center;'>"
 							+ UtilText.parse(getCharacterToBeEgged(),
 									"[style.italicsYellowLight([npc.Name] [npc.has] had "+Util.intToString(eggCount)+" egg"+(eggCount>1?"s":"")+" implanted in [npc.her] "+areaEgged+"!)]")
 					+ "</p>");
 			
 			Main.sex.getCharacterPerformingAction().implantPregnantLitter(getCharacterToBeEgged(), (SexAreaOrifice) getAreaToBeEgged());
+			return sb.toString();
 		}
 		@Override
 		public String applyEndEffects() {
@@ -4868,14 +4875,16 @@ public class GenericActions {
 			return "";
 		}
 		@Override
-		public void applyEffects() {
+		public String applyEffectsString() {
+			StringBuilder sb = new StringBuilder();
 			int eggCount = Main.sex.getCharacterPerformingAction().getPregnantLitter().getTotalLitterCount();
-			Main.game.getTextEndStringBuilder().append(
+			sb.append(
 					"<p style='text-align:center;'>"
 							+ UtilText.parse(getCharacterToBeEgged(),
 									"[style.italicsYellowLight([npc.Name] [npc.has] had "+Util.intToString(eggCount)+" egg"+(eggCount>1?"s":"")+" implanted in [npc.her] womb!)]")
 					+ "</p>");
 			Main.sex.getCharacterPerformingAction().implantPregnantLitter(getCharacterToBeEgged(), (SexAreaOrifice) getAreaToBeEgged());
+			return sb.toString();
 		}
 		@Override
 		public String applyEndEffects() {
@@ -4964,14 +4973,16 @@ public class GenericActions {
 			return "";
 		}
 		@Override
-		public void applyEffects() {
+		public String applyEffectsString() {
+			StringBuilder sb = new StringBuilder();
 			int eggCount = Main.sex.getCharacterPerformingAction().getPregnantLitter().getTotalLitterCount();
-			Main.game.getTextEndStringBuilder().append(
+			sb.append(
 					"<p style='text-align:center;'>"
 							+ UtilText.parse(getCharacterToBeEgged(),
 									"[style.italicsYellowLight([npc.Name] [npc.has] had "+Util.intToString(eggCount)+" egg"+(eggCount>1?"s":"")+" implanted in [npc.her] stomach!)]")
 					+ "</p>");
 			Main.sex.getCharacterPerformingAction().implantPregnantLitter(getCharacterToBeEgged(), (SexAreaOrifice) getAreaToBeEgged());
+			return sb.toString();
 		}
 		@Override
 		public String applyEndEffects() {
@@ -5060,14 +5071,16 @@ public class GenericActions {
 			return "";
 		}
 		@Override
-		public void applyEffects() {
+		public String applyEffectsString() {
+			StringBuilder sb = new StringBuilder();
 			int eggCount = Main.sex.getCharacterPerformingAction().getPregnantLitter().getTotalLitterCount();
-			Main.game.getTextEndStringBuilder().append(
+			sb.append(
 					"<p style='text-align:center;'>"
 							+ UtilText.parse(getCharacterToBeEgged(),
 									"[style.italicsYellowLight([npc.Name] [npc.has] had "+Util.intToString(eggCount)+" egg"+(eggCount>1?"s":"")+" implanted in [npc.her] stomach!)]")
 					+ "</p>");
 			Main.sex.getCharacterPerformingAction().implantPregnantLitter(getCharacterToBeEgged(), (SexAreaOrifice) getAreaToBeEgged());
+			return sb.toString();
 		}
 		@Override
 		public String applyEndEffects() {
@@ -5156,14 +5169,16 @@ public class GenericActions {
 			return "";
 		}
 		@Override
-		public void applyEffects() {
+		public String applyEffectsString() {
+			StringBuilder sb = new StringBuilder();
 			int eggCount = Main.sex.getCharacterPerformingAction().getPregnantLitter().getTotalLitterCount();
-			Main.game.getTextEndStringBuilder().append(
+			sb.append(
 					"<p style='text-align:center;'>"
 							+ UtilText.parse(getCharacterToBeEgged(),
 									"[style.italicsYellowLight([npc.Name] [npc.has] had "+Util.intToString(eggCount)+" egg"+(eggCount>1?"s":"")+" implanted in [npc.her] [npc.breasts+]!)]")
 					+ "</p>");
 			Main.sex.getCharacterPerformingAction().implantPregnantLitter(getCharacterToBeEgged(), (SexAreaOrifice) getAreaToBeEgged());
+			return sb.toString();
 		}
 		@Override
 		public String applyEndEffects() {
@@ -5252,14 +5267,16 @@ public class GenericActions {
 			return "";
 		}
 		@Override
-		public void applyEffects() {
+		public String applyEffectsString() {
+			StringBuilder sb = new StringBuilder();
 			int eggCount = Main.sex.getCharacterPerformingAction().getPregnantLitter().getTotalLitterCount();
-			Main.game.getTextEndStringBuilder().append(
+			sb.append(
 					"<p style='text-align:center;'>"
 							+ UtilText.parse(getCharacterToBeEgged(),
 									"[style.italicsYellowLight([npc.Name] [npc.has] had "+Util.intToString(eggCount)+" egg"+(eggCount>1?"s":"")+" implanted in [npc.her] [npc.crotchBoobs+]!)]")
 					+ "</p>");
 			Main.sex.getCharacterPerformingAction().implantPregnantLitter(getCharacterToBeEgged(), (SexAreaOrifice) getAreaToBeEgged());
+			return sb.toString();
 		}
 		@Override
 		public String applyEndEffects() {
@@ -5542,15 +5559,17 @@ public class GenericActions {
 			return "";
 		}
 		@Override
-		public void applyEffects() {
+		public String applyEffectsString() {
+			StringBuilder sb = new StringBuilder();
 			int eggCount = Main.sex.getCharacterPerformingAction().getPregnantLitter().getTotalLitterCount();
-			Main.game.getTextEndStringBuilder().append(
+			sb.append(
 					"<p style='text-align:center;'>"
 							+ UtilText.parse(getCharacterToBeEgged(),
 									"[style.italicsYellowLight([npc.Name] [npc.has] had "+Util.intToString(eggCount)+" egg"+(eggCount>1?"s":"")+" implanted in [npc.her] womb!)]")
 					+ "</p>");
 			
 			Main.sex.getCharacterPerformingAction().implantPregnantLitter(getCharacterToBeEgged(), (SexAreaOrifice) getAreaToBeEgged());
+			return sb.toString();
 		}
 		@Override
 		public String applyEndEffects() {
@@ -5638,15 +5657,17 @@ public class GenericActions {
 			return "";
 		}
 		@Override
-		public void applyEffects() {
+		public String applyEffectsString() {
+			StringBuilder sb = new StringBuilder();
 			int eggCount = Main.sex.getCharacterPerformingAction().getPregnantLitter().getTotalLitterCount();
-			Main.game.getTextEndStringBuilder().append(
+			sb.append(
 					"<p style='text-align:center;'>"
 							+ UtilText.parse(getCharacterToBeEgged(),
 									"[style.italicsYellowLight([npc.Name] [npc.has] had "+Util.intToString(eggCount)+" egg"+(eggCount>1?"s":"")+" implanted in [npc.her] stomach!)]")
 					+ "</p>");
 			
 			Main.sex.getCharacterPerformingAction().implantPregnantLitter(getCharacterToBeEgged(), (SexAreaOrifice) getAreaToBeEgged());
+			return sb.toString();
 		}
 		@Override
 		public String applyEndEffects() {
@@ -5734,15 +5755,17 @@ public class GenericActions {
 			return "";
 		}
 		@Override
-		public void applyEffects() {
+		public String applyEffectsString() {
+			StringBuilder sb = new StringBuilder();
 			int eggCount = Main.sex.getCharacterPerformingAction().getPregnantLitter().getTotalLitterCount();
-			Main.game.getTextEndStringBuilder().append(
+			sb.append(
 					"<p style='text-align:center;'>"
 							+ UtilText.parse(getCharacterToBeEgged(),
 									"[style.italicsYellowLight([npc.Name] [npc.has] had "+Util.intToString(eggCount)+" egg"+(eggCount>1?"s":"")+" implanted in [npc.her] stomach!)]")
 					+ "</p>");
 			
 			Main.sex.getCharacterPerformingAction().implantPregnantLitter(getCharacterToBeEgged(), (SexAreaOrifice) getAreaToBeEgged());
+			return sb.toString();
 		}
 		@Override
 		public String applyEndEffects() {
@@ -5830,15 +5853,17 @@ public class GenericActions {
 			return "";
 		}
 		@Override
-		public void applyEffects() {
+		public String applyEffectsString() {
+			StringBuilder sb = new StringBuilder();
 			int eggCount = Main.sex.getCharacterPerformingAction().getPregnantLitter().getTotalLitterCount();
-			Main.game.getTextEndStringBuilder().append(
+			sb.append(
 					"<p style='text-align:center;'>"
 							+ UtilText.parse(getCharacterToBeEgged(),
 									"[style.italicsYellowLight([npc.Name] [npc.has] had "+Util.intToString(eggCount)+" egg"+(eggCount>1?"s":"")+" implanted in [npc.her] [npc.breasts+]!)]")
 					+ "</p>");
 			
 			Main.sex.getCharacterPerformingAction().implantPregnantLitter(getCharacterToBeEgged(), (SexAreaOrifice) getAreaToBeEgged());
+			return sb.toString();
 		}
 		@Override
 		public String applyEndEffects() {
@@ -5926,15 +5951,17 @@ public class GenericActions {
 			return "";
 		}
 		@Override
-		public void applyEffects() {
+		public String applyEffectsString() {
+			StringBuilder sb = new StringBuilder();
 			int eggCount = Main.sex.getCharacterPerformingAction().getPregnantLitter().getTotalLitterCount();
-			Main.game.getTextEndStringBuilder().append(
+			sb.append(
 					"<p style='text-align:center;'>"
 							+ UtilText.parse(getCharacterToBeEgged(),
 									"[style.italicsYellowLight([npc.Name] [npc.has] had "+Util.intToString(eggCount)+" egg"+(eggCount>1?"s":"")+" implanted in [npc.her] [npc.crotchBoobs+]!)]")
 					+ "</p>");
 			
 			Main.sex.getCharacterPerformingAction().implantPregnantLitter(getCharacterToBeEgged(), (SexAreaOrifice) getAreaToBeEgged());
+			return sb.toString();
 		}
 		@Override
 		public String applyEndEffects() {
