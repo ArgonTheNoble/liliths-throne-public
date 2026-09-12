@@ -23,6 +23,7 @@ import com.lilithsthrone.game.character.race.AbstractSubspecies;
 import com.lilithsthrone.game.character.race.FurryPreference;
 import com.lilithsthrone.game.character.race.Subspecies;
 import com.lilithsthrone.game.character.race.SubspeciesPreference;
+import com.lilithsthrone.game.character.race.TransformationPreference;
 import com.lilithsthrone.game.dialogue.responses.Response;
 import com.lilithsthrone.game.settings.ContentPreferenceValue;
 import com.lilithsthrone.game.settings.ForcedFetishTendency;
@@ -324,6 +325,20 @@ public class OptionsController {
 				}, false);
 			}
 		}
+		for (TransformationPreference preference : TransformationPreference.values()) {
+			id = "ALL_TF_"+preference;
+			if (MainController.document.getElementById(id) != null) {
+				((EventTarget) MainController.document.getElementById(id)).addEventListener("click", e->{
+					for (AbstractSubspecies subspecies : Subspecies.getAllSubspecies()) {
+						if(subspecies.isSpawnPreferencesEnabled() && subspecies.isDisplayedInFurryPreferences()) {
+							Main.getProperties().setSubspeciesTransformationPreference(subspecies, preference);
+						}
+					}
+					Main.saveProperties();
+					Main.game.setContent(new Response("", "", Main.game.getCurrentDialogueNode()));
+				}, false);
+			}
+		}
 		
 		for (AbstractSubspecies subspecies : Subspecies.getAllSubspecies()) {
 			String subspeciesId = Subspecies.getIdFromSubspecies(subspecies);
@@ -392,6 +407,23 @@ public class OptionsController {
 									?"Set the weighted chance for masculine genders of this subspecies to spawn. The spawn frequency of '"+preference.getName()+"' has a weight of: <b>"+preference.getValue()+"</b><br/>"
 									+"<i>This weighting is further affected by map-specific spawn frequencies.</i>"
 									:"This subspecies cannot have its spawn preference changed!"));
+				}
+			}
+			for (TransformationPreference preference : TransformationPreference.values()) {
+				id = "TRANSFORMATION_"+preference+"_"+subspeciesId;
+				if (MainController.document.getElementById(id) != null) {
+					if (subspecies.isSpawnPreferencesEnabled()) {
+						((EventTarget) MainController.document.getElementById(id)).addEventListener("click", e->{
+							Main.getProperties().setSubspeciesTransformationPreference(subspecies, preference);
+							Main.saveProperties();
+							Main.game.setContent(new Response("", "", Main.game.getCurrentDialogueNode()));
+						}, false);
+					}
+					MainController.addTooltipListeners(id, new TooltipInformationEventListener().setInformation(
+							Util.capitaliseSentence(preference.getName()),
+							subspecies.isSpawnPreferencesEnabled()
+									?"Set the weighted chance for forced transformations to use this subspecies. The frequency of '"+preference.getName()+"' has a weight of: <b>"+preference.getValue()+"</b><br/>"
+									:"This subspecies cannot have its transformation preference changed!"));
 				}
 			}
 		}
@@ -614,11 +646,28 @@ public class OptionsController {
 			MainController.addTooltipListeners(id, new TooltipInformationEventListener().setInformation(
 					ftt.getName(), ftt.getDescription()));
 		}
+
+		id = "RANDOM_RACE_CHANCE_ON";
+		if (MainController.document.getElementById(id) != null) {
+			((EventTarget) MainController.document.getElementById(id)).addEventListener("click", e->{
+				Main.getProperties().randomRacePercentage = Math.min(100, Main.getProperties().randomRacePercentage+10);
+				Main.saveProperties();
+				Main.game.setContent(new Response("", "", Main.game.getCurrentDialogueNode()));
+			}, false);
+		}
+		id = "RANDOM_RACE_CHANCE_OFF";
+		if (MainController.document.getElementById(id) != null) {
+			((EventTarget) MainController.document.getElementById(id)).addEventListener("click", e->{
+				Main.getProperties().randomRacePercentage = Math.max(0, Main.getProperties().randomRacePercentage-5);
+				Main.saveProperties();
+				Main.game.setContent(new Response("", "", Main.game.getCurrentDialogueNode()));
+			}, false);
+		}
 		
 		id = "FORCED_FETISH_ON";
 		if (MainController.document.getElementById(id) != null) {
 			((EventTarget) MainController.document.getElementById(id)).addEventListener("click", e->{
-				Main.getProperties().forcedFetishPercentage = Math.min(100, Main.getProperties().forcedFetishPercentage+10);
+				Main.getProperties().forcedFetishPercentage = Math.min(100, Main.getProperties().forcedFetishPercentage+5);
 				Main.saveProperties();
 				Main.game.setContent(new Response("", "", Main.game.getCurrentDialogueNode()));
 			}, false);

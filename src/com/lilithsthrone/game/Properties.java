@@ -39,6 +39,7 @@ import com.lilithsthrone.game.character.race.AbstractSubspecies;
 import com.lilithsthrone.game.character.race.FurryPreference;
 import com.lilithsthrone.game.character.race.Subspecies;
 import com.lilithsthrone.game.character.race.SubspeciesPreference;
+import com.lilithsthrone.game.character.race.TransformationPreference;
 import com.lilithsthrone.game.dialogue.eventLog.EventLogEntryEncyclopediaUnlock;
 import com.lilithsthrone.game.inventory.AbstractCoreType;
 import com.lilithsthrone.game.inventory.ItemTag;
@@ -169,7 +170,7 @@ public class Properties {
 	public int forcedTFPercentage = 40;
 	public int forcedFetishPercentage = 0;
 
-	public float randomRacePercentage = 0.15f;
+	public int randomRacePercentage = 15;
 
 	public int pregnancyBreastGrowthVariance = 2;
 	public int pregnancyBreastGrowth = 1;
@@ -229,6 +230,8 @@ public class Properties {
 	
 	private Map<AbstractSubspecies, SubspeciesPreference> subspeciesFemininePreferencesMap;
 	private Map<AbstractSubspecies, SubspeciesPreference> subspeciesMasculinePreferencesMap;
+
+	private Map<AbstractSubspecies, TransformationPreference> subspeciesTransformationPreferencesMap;
 
 	public Map<Colour, Integer> skinColourPreferencesMap;
 	
@@ -299,9 +302,11 @@ public class Properties {
 		
 		subspeciesFemininePreferencesMap = new HashMap<>();
 		subspeciesMasculinePreferencesMap = new HashMap<>();
+		subspeciesTransformationPreferencesMap = new HashMap<>();
 		for(AbstractSubspecies s : Subspecies.getAllSubspecies()) {
 			subspeciesFemininePreferencesMap.put(s, s.getSubspeciesPreferenceDefault());
 			subspeciesMasculinePreferencesMap.put(s, s.getSubspeciesPreferenceDefault());
+			subspeciesTransformationPreferencesMap.put(s, TransformationPreference.ONE_LOW);
 		}
 		
 		skinColourPreferencesMap = new LinkedHashMap<>();
@@ -615,6 +620,18 @@ public class Properties {
 				preference = doc.createAttribute("furryPreference");
 				preference.setValue(subspeciesMasculineFurryPreferencesMap.get(subspecies).toString());
 				element.setAttributeNode(preference);
+
+				element = doc.createElement("preferenceTransformation");
+				racePreferences.appendChild(element);
+				
+				race = doc.createAttribute("subspecies");
+				race.setValue(Subspecies.getIdFromSubspecies(subspecies));
+				element.setAttributeNode(race);
+				
+				preference = doc.createAttribute("preference");
+				preference.setValue(subspeciesTransformationPreferencesMap.get(subspecies).toString());
+				element.setAttributeNode(preference);
+
 			}
 
 			// Skin colour preferences:
@@ -987,7 +1004,7 @@ public class Properties {
 				}
 				// Randomized percentage of body pref race.
 				if(element.getElementsByTagName("randomRacePercentage").item(0)!=null) {
-					randomRacePercentage = Float.parseFloat(((Element)element.getElementsByTagName("randomRacePercentage").item(0)).getAttribute("value"));
+					randomRacePercentage = Integer.valueOf(((Element)element.getElementsByTagName("randomRacePercentage").item(0)).getAttribute("value"));
 				}
 
 				// Forced TF preference:
@@ -1228,6 +1245,19 @@ public class Properties {
 							try {
 								this.setMasculineSubspeciesPreference(Subspecies.getSubspeciesFromId(e.getAttribute("subspecies")), SubspeciesPreference.valueOf(e.getAttribute("preference")));
 								this.setMasculineFurryPreference(Subspecies.getSubspeciesFromId(e.getAttribute("subspecies")), FurryPreference.valueOf(e.getAttribute("furryPreference")));
+								
+							} catch(Exception ex) {
+							}
+						}
+					}
+				}
+				if(element!=null && element.getElementsByTagName("preferenceTransformation")!=null) {
+					for(int i=0; i<element.getElementsByTagName("preferenceTransformation").getLength(); i++){
+						Element e = ((Element)element.getElementsByTagName("preferenceTransformation").item(i));
+						
+						if(!e.getAttribute("subspecies").isEmpty()) {
+							try {
+								this.setSubspeciesTransformationPreference(Subspecies.getSubspeciesFromId(e.getAttribute("subspecies")), TransformationPreference.valueOf(e.getAttribute("preference")));
 								
 							} catch(Exception ex) {
 							}
@@ -1719,6 +1749,10 @@ public class Properties {
 		subspeciesMasculinePreferencesMap.put(subspecies, subspeciesPreference);
 	}
 
+	public void setSubspeciesTransformationPreference(AbstractSubspecies subspecies, TransformationPreference transformationPreference) {
+		subspeciesTransformationPreferencesMap.put(subspecies, transformationPreference);
+	}
+
 	public Map<AbstractSubspecies, FurryPreference> getSubspeciesFeminineFurryPreferencesMap() {
 		return subspeciesFeminineFurryPreferencesMap;
 	}
@@ -1733,6 +1767,10 @@ public class Properties {
 
 	public Map<AbstractSubspecies, SubspeciesPreference> getSubspeciesMasculinePreferencesMap() {
 		return subspeciesMasculinePreferencesMap;
+	}
+
+	public Map<AbstractSubspecies, TransformationPreference> getSubspeciesTransformationPreferencesMap() {
+		return subspeciesTransformationPreferencesMap;
 	}
 
 	public void resetGenderPreferences() {
@@ -1808,7 +1846,7 @@ public class Properties {
 		this.clothingFemininityLevel = clothingFemininityLevel;
 	}
 	
-	public float getRandomRacePercentage() {
+	public int getRandomRacePercentage() {
 		return randomRacePercentage;
 	}
 	

@@ -1321,7 +1321,10 @@ public enum SlaveJob {
 				int milked = MilkingRoom.getActualGirlcumPerHour(character);
 				value += Math.ceil(milked * character.getGirlcum().getValuePerMl());
 			}
+			value *= 2;
 		}
+
+		value *= 2;
 
 		if(character.isSlave()) {
 			if(character.getOwner().hasTrait(Perk.JOB_OFFICE_WORKER, true)) {

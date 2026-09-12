@@ -382,6 +382,12 @@ public class ItemEffect implements XMLSaving {
 	
 	public int getCost() {
 		int cost = 1;
+		if(getPrimaryModifier() == TFModifier.CLOTHING_ATTRIBUTE && getSecondaryModifier() == TFModifier.ENCHANTMENT_LIMIT) {
+			cost = 100;
+			cost *= (potency==null ? 1 : potency.getValue());
+			return cost;
+		}
+
 		if(getPrimaryModifier()!=null) {
 			if(getPrimaryModifier()!=TFModifier.NONE) {
 				cost+=getPrimaryModifier().getValue();

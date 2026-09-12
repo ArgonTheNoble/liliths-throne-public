@@ -255,7 +255,7 @@ public class EnchantingUtils {
 	
 	private static int applyDiscountsForPerksAndFetishes(AbstractCoreItem ingredient, int cost) {
 		if(Main.game.getPlayer().hasFetish(Fetish.FETISH_TRANSFORMATION_GIVING) && ingredient instanceof AbstractItem) {
-			cost/=2;
+			cost/=4;
 		}
 		if(Main.game.getPlayer().hasPerkAnywhereInTree(Perk.CLOTHING_ENCHANTER) && ingredient instanceof AbstractClothing) {
 			cost/=2;

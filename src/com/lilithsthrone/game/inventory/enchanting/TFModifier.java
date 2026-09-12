@@ -1627,6 +1627,7 @@ public enum TFModifier {
 		clothingAttributeList.add(TFModifier.RESISTANCE_POISON);
 		clothingAttributeList.add(TFModifier.SPELL_COST_MODIFIER);
 		clothingAttributeList.add(TFModifier.CRITICAL_DAMAGE);
+		clothingAttributeList.add(TFModifier.ENCHANTMENT_LIMIT);
 		
 
 		tattooPrimaryList.add(TFModifier.CLOTHING_MAJOR_ATTRIBUTE);

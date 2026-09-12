@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Arrays;
 
 import com.lilithsthrone.game.character.effects.StatusEffect;
 import com.lilithsthrone.game.character.fetishes.Fetish;
@@ -500,6 +501,25 @@ public class PlaceUpgrade {
 				}
 			}
 		}
+	};
+
+	public static final AbstractPlaceUpgrade LILAYA_SLAVE_ROOM_UPGRADE_COMFY = new AbstractPlaceUpgrade(false, 
+			PresetColour.GENERIC_GOOD,
+			"Comfortable Furniture",
+			"Furnish the room with a large, comfy couch and fluffy beanbags."
+			+ "This is sure to relieve the stress of poor living conditions.",
+			"Furnish the room with a large, comfy couch and fluffy beanbags."
+			+ "This is sure to relieve the stress of poor living conditions.",
+			"Furnish the room with a large, comfy couch and fluffy beanbags."
+			+ "This is sure to relieve the stress of poor living conditions.",
+			1000,
+			100,
+			10,
+			0,
+			0.1f,
+			0.2f,
+			Arrays.asList(LILAYA_SLAVE_ROOM_QUADRUPLE)) {
+
 	};
 	
 	public static final AbstractPlaceUpgrade LILAYA_SLAVE_ROOM_DOWNGRADE_BED = new AbstractPlaceUpgrade(false,
@@ -1673,6 +1693,8 @@ public class PlaceUpgrade {
 		slaveQuartersUpgradesQuadruple = Util.newArrayListOfValues(
 				PlaceUpgrade.LILAYA_SLAVE_ROOM_ROOM_SERVICE,
 				PlaceUpgrade.LILAYA_SLAVE_ROOM_DOG_BOWLS,
+
+				PlaceUpgrade.LILAYA_SLAVE_ROOM_UPGRADE_COMFY,
 				
 				PlaceUpgrade.LILAYA_SLAVE_ROOM_UPGRADE_BED,
 				PlaceUpgrade.LILAYA_SLAVE_ROOM_DOWNGRADE_BED,

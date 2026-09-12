@@ -80,6 +80,7 @@ import com.lilithsthrone.game.character.race.RaceStage;
 import com.lilithsthrone.game.character.race.RacialBody;
 import com.lilithsthrone.game.character.race.Subspecies;
 import com.lilithsthrone.game.character.race.SubspeciesSpawnRarity;
+import com.lilithsthrone.game.character.race.TransformationPreference;
 import com.lilithsthrone.game.combat.spells.Spell;
 import com.lilithsthrone.game.dialogue.DialogueNode;
 import com.lilithsthrone.game.dialogue.responses.Response;
@@ -2614,59 +2615,34 @@ public abstract class NPC extends GameCharacter implements XMLSaving {
 			stage = RaceStage.HUMAN;
 			
 		} else {
-			/*
-			// Chance for predator races to prefer prey races:
-			if(getRace()==Race.CAT_MORPH && Math.random()>0.8f) {
-				species = Subspecies.HARPY;
-			}
-			if((getRace()==Race.WOLF_MORPH || getRace()==Race.DOG_MORPH) && Math.random()>0.8f) {
-				List<AbstractSubspecies> availableRaces = new ArrayList<>();
-				availableRaces.add(Subspecies.CAT_MORPH);
-				availableRaces.add(Subspecies.HARPY);
-				availableRaces.add(Subspecies.COW_MORPH);
-				availableRaces.add(Subspecies.SQUIRREL_MORPH);
-				species = availableRaces.get(Util.random.nextInt(availableRaces.size()));
-			}
-			*/
 			
 			// Chance for race to be random:
-			if(Math.random() <= Main.getProperties().getRandomRacePercentage() * 2) {
+			if(Util.random.nextInt(100) <= Main.getProperties().getRandomRacePercentage()) {
  
 				wantTaur = (Util.random.nextInt(100) < Main.getProperties().taurSpawnRate * (this.getLegConfiguration() == LegConfiguration.BIPEDAL ? 1 : 3));
 
-				/*
-				List<Map.Entry<AbstractSubspecies, SubspeciesPreference>> sm = new ArrayList<>();
-				if(!preferredGender.isFeminine())
-					sm.addAll(Main.getProperties().getSubspeciesMasculinePreferencesMap().entrySet());
-				else
-					sm.addAll(Main.getProperties().getSubspeciesFemininePreferencesMap().entrySet());
+				Map<AbstractSubspecies, TransformationPreference> tfPrepMap = Main.getProperties().getSubspeciesTransformationPreferencesMap();
+				Map<AbstractSubspecies, Integer> availableRaces = new HashMap<>();
 
-				for(Map.Entry<AbstractSubspecies, SubspeciesPreference> s : sm) {
-					if(!s.getKey().isDisplayedInFurryPreferences()) {
-						sm.remove(s.getKey());
-					} else if(s.getValue().getValue() == 0) {
-						sm.remove(s.getKey());
-					} else if (!wantTaur && s.getKey().isNonBiped()) {
-						sm.remove(s.getKey());
+				for(AbstractSubspecies s : Subspecies.getAllSubspecies()) {
+					if(s.getSubspeciesOverridePriority()>0 || !s.isFurryPreferencesEnabled() || (!wantTaur && s.isNonBiped())) { // Do not spawn demonic races, elementals, or youko
+						continue;
+					} else {
+						availableRaces.put(s, tfPrepMap.get(s).getValue());
 					}
 				}
-				species = sm.get(Util.random.nextInt(sm.size())).getKey();
-				*/
-
-				Map<AbstractSubspecies, Integer> availableRaces = new HashMap<>();
-				for(AbstractSubspecies s : Subspecies.getAllSubspecies()) {
-					if(s.getSubspeciesOverridePriority()>0 || (!wantTaur && s.isNonBiped())) { // Do not spawn demonic races, elementals, or youko
-						continue;
-					}
-					AbstractWorldType world = this.worldLocation;
-					if(world == null)
-						world = WorldType.DOMINION;
-					AbstractPlaceType place = this.getLocationPlaceType();
-					if(place == null)
-						place = PlaceType.DOMINION_BACK_ALLEYS;
-					Map<AbstractSubspecies, SubspeciesSpawnRarity> subMap = Subspecies.getWorldSpecies(world, place, false);
-					if(subMap.containsKey(s)) {
-						AbstractSubspecies.addToSubspeciesMap((int) (10000 * subMap.get(s).getChanceMultiplier()), preferredGender, s, availableRaces);
+				if(availableRaces.isEmpty()) {
+					for(AbstractSubspecies s : Subspecies.getAllSubspecies()) {
+						AbstractWorldType world = this.worldLocation;
+						if(world == null)
+							world = WorldType.DOMINION;
+						AbstractPlaceType place = this.getLocationPlaceType();
+						if(place == null)
+							place = PlaceType.DOMINION_BACK_ALLEYS;
+						Map<AbstractSubspecies, SubspeciesSpawnRarity> subMap = Subspecies.getWorldSpecies(world, place, false);
+						if(subMap.containsKey(s)) {
+							AbstractSubspecies.addToSubspeciesMap((int) (10000 * subMap.get(s).getChanceMultiplier()), preferredGender, s, availableRaces);
+						}
 					}
 				}
 
@@ -2687,29 +2663,12 @@ public abstract class NPC extends GameCharacter implements XMLSaving {
 					}
 				}
 				
-				int total = 0;
-				for(Integer i : availableRaces.values()) {
-					total += i;
-				}
-				
-				if(availableRaces.isEmpty() || total==0 || Math.random()<humanChance) {
+				if(availableRaces.isEmpty() || Math.random()<humanChance) {
 					species = Subspecies.HUMAN;
 				} else {
 					species = Util.getRandomObjectFromWeightedMap(availableRaces);
 				}
 
-				/*
-				List<AbstractSubspecies> availableRaces = new ArrayList<>();
-				availableRaces.add(Subspecies.CAT_MORPH);
-				availableRaces.add(Subspecies.DOG_MORPH);
-				availableRaces.add(Subspecies.HARPY);
-				availableRaces.add(Subspecies.HORSE_MORPH);
-				availableRaces.add(Subspecies.HUMAN);
-				availableRaces.add(Subspecies.SQUIRREL_MORPH);
-				availableRaces.add(Subspecies.COW_MORPH);
-				availableRaces.add(Subspecies.WOLF_MORPH);
-				species = availableRaces.get(Util.random.nextInt(availableRaces.size()));
-				*/
 			}
 			
 			// Preferred race stage:

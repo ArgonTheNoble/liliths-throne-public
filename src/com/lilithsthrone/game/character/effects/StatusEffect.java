@@ -3,6 +3,7 @@ package com.lilithsthrone.game.character.effects;
 import java.io.File;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -4162,9 +4163,11 @@ public class StatusEffect {
 		public String extraRemovalEffects(GameCharacter target) {
 			StringBuilder sb = new StringBuilder();
 			
-			if (target.isPregnant()) {
-				int maxHourLength = (int)((Main.getProperties().pregnancyDuration * 24) / 2f);
-				target.addStatusEffect(PREGNANT_1, 60 * 60 * ((maxHourLength-12) + Util.random.nextInt(13)));
+			if (target.isNewlyPregnant()) {
+				//int maxHourLength = (int)((Main.getProperties().pregnancyDuration * 24) / 2f);
+				//target.addStatusEffect(PREGNANT_1, 60 * 60 * ((maxHourLength-12) + Util.random.nextInt(13)));
+				//target.addStatusIfAbsent(PREGNANT_1, maxHourLength * 60 * 60);
+				//target.calculatePregnancyStatus();
 				target.loadImages(true); // Reload images for pregnant versions
 				
 				if (target.isPlayer() && !((PlayerCharacter) target).isQuestCompleted(QuestLine.SIDE_FIRST_TIME_PREGNANCY)) {
@@ -4403,11 +4406,11 @@ public class StatusEffect {
 				sb.append("</p>");
 				
 			} else {
-				target.endPregnancy(false);
+				//target.endPregnancy(false);
 				sb.append("<p>"
 							+ "Enough time has passed now for you to be sure that you're in the clear."
-							+ " There's no sign of any bump in your belly,"+(target.getBodyMaterial()==BodyMaterial.SLIME?" or of any slime cores growing inside of you,":"")
-								+" and you realise that despite having unprotected sex, you managed to avoid getting pregnant."
+							+ " There's no sign of any " + (target.isPregnant()?"additional":"") + " bump in your belly,"+(target.getBodyMaterial()==BodyMaterial.SLIME?" or of any slime cores growing inside of you,":"")
+								+" and you realise that despite having unprotected sex, you managed to avoid getting " + (target.isPregnant()?"even more":"") + " pregnant."
 						+ "</p>"
 						+ "<p>"
 							+ (target.hasFetish(Fetish.FETISH_PREGNANCY)
@@ -4424,6 +4427,9 @@ public class StatusEffect {
 			} else {
 				return "";
 			}
+		}
+		public boolean isConditionsMet(GameCharacter target) {
+			return target.hasStatusEffect(StatusEffect.PREGNANT_0);
 		}
 		@Override
 		public String applyPostRemovalStatusEffect(GameCharacter target) {
@@ -4456,8 +4462,8 @@ public class StatusEffect {
 		}
 		@Override
 		public String extraRemovalEffects(GameCharacter target) {
-			int maxHourLength = (int)((Main.getProperties().pregnancyDuration * 24) / 2f);
-			target.addStatusEffect(PREGNANT_2, 60 * 60 * ((maxHourLength-12) + Util.random.nextInt(13)));
+			//int maxHourLength = (int)((Main.getProperties().pregnancyDuration * 24) / 2f);
+			//target.addStatusEffect(PREGNANT_2, 60 * 60 * ((maxHourLength-12) + Util.random.nextInt(13)));
 			
 			boolean breastGrowth = false;
 			if(Main.getProperties().pregnancyBreastGrowth>0 && target.getBreastRawSizeValue()<Main.getProperties().pregnancyBreastGrowthLimit) {
@@ -4538,6 +4544,9 @@ public class StatusEffect {
 			}
 			
 			return sb.toString();
+		}
+		public boolean isConditionsMet(GameCharacter target) {
+			return target.hasStatusEffect(StatusEffect.PREGNANT_1);
 		}
 		@Override
 		public boolean isSexEffect() {
@@ -4656,6 +4665,10 @@ public class StatusEffect {
 			return sb.toString();
 		}
 		@Override
+		public boolean isConditionsMet(GameCharacter target) {
+			return target.hasStatusEffect(StatusEffect.PREGNANT_2);
+		}
+		@Override
 		public boolean isSexEffect() {
 			return true;
 		}
@@ -4687,10 +4700,11 @@ public class StatusEffect {
 		}
 		@Override
 		public boolean isConditionsMet(GameCharacter target) {
-			return target.isPregnant()
-					 && !target.hasStatusEffect(StatusEffect.PREGNANT_0)
-					 && !target.hasStatusEffect(StatusEffect.PREGNANT_1)
-					 && !target.hasStatusEffect(StatusEffect.PREGNANT_2);
+			// return target.isPregnant()
+			// 		 && !target.hasStatusEffect(StatusEffect.PREGNANT_0)
+			// 		 && !target.hasStatusEffect(StatusEffect.PREGNANT_1)
+			// 		 && !target.hasStatusEffect(StatusEffect.PREGNANT_2);
+			return target.isReadyForBirthing();
 		}
 		@Override
 		public boolean isSexEffect() {
@@ -15014,8 +15028,8 @@ public class StatusEffect {
 
 	static {
 		allStatusEffects = new ArrayList<>();
-		allStatusEffectsRequiringApplicationCheck = new ArrayList<>();
-		allStatusEffectsRequiringApplicationCheckNonCombat = new ArrayList<>();
+		allStatusEffectsRequiringApplicationCheck = new CopyOnWriteArrayList<>();
+		allStatusEffectsRequiringApplicationCheckNonCombat = new CopyOnWriteArrayList<>();
 		
 		// Modded status effects:
 		

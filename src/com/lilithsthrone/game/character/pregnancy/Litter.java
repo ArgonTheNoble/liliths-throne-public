@@ -31,7 +31,10 @@ public class Litter implements XMLSaving {
 	private LocalDateTime conceptionDate;
 	private LocalDateTime birthDate;
 	private LocalDateTime incubationStartDate;
-	
+	private int stage;
+	//-1, 0, 1, 2, 3
+	//born, new, 1, 2, ready
+
 	private String motherId;
 	private String fatherId;
 	private String incubatorId; // For if this litter was eggs incubated in a third party
@@ -53,9 +56,10 @@ public class Litter implements XMLSaving {
 	public Litter(LocalDateTime conceptionDate, LocalDateTime birthDate, GameCharacter mother, GameCharacter father, FertilisationType fertilisationType, List<OffspringSeed> offspring) {
 		this.id = mother.getId()+mother.getLittersGenerated();
 		
-		this.conceptionDate = LocalDateTime.of(conceptionDate.getYear(), conceptionDate.getMonth(), conceptionDate.getDayOfMonth(), 12, 0);
+		this.conceptionDate = conceptionDate; //LocalDateTime.of(conceptionDate.getYear(), conceptionDate.getMonth(), conceptionDate.getDayOfMonth(), 12, 0);
 		this.birthDate = LocalDateTime.of(birthDate.getYear(), birthDate.getMonth(), birthDate.getDayOfMonth(), 12, 0);
 		this.incubationStartDate = null;
+		this.stage = 0;
 		
 		this.fertilisationType = fertilisationType;
 		
@@ -111,6 +115,7 @@ public class Litter implements XMLSaving {
 		this.conceptionDate = LocalDateTime.of(conceptionDate.getYear(), conceptionDate.getMonth(), conceptionDate.getDayOfMonth(), 12, 0);
 		this.birthDate = LocalDateTime.of(birthDate.getYear(), birthDate.getMonth(), birthDate.getDayOfMonth(), 12, 0);
 		this.incubationStartDate = null;
+		this.stage = 0;
 		
 		this.motherId = motherId;
 		this.fatherId = fatherId;
@@ -152,6 +157,8 @@ public class Litter implements XMLSaving {
 			XMLUtil.createXMLElementWithValue(doc, element, "dayOfIncubationStart", String.valueOf(this.getIncubationStartDate().getDayOfMonth()));
 		}
 		
+		XMLUtil.addAttribute(doc, element, "stage", String.valueOf(this.getStage()));
+
 		XMLUtil.addAttribute(doc, element, "motherId", this.getMotherId());
 		XMLUtil.addAttribute(doc, element, "fatherId", this.getFatherId());
 		XMLUtil.addAttribute(doc, element, "incubatorId", this.getIncubatorId());
@@ -263,6 +270,12 @@ public class Litter implements XMLSaving {
 				fatherRace,
 				birthedDescription);
 		
+		if(parentElement.hasAttribute("stage")) {
+			litter.setStage(Integer.valueOf(parentElement.getAttribute("stage")));
+		} else {
+			litter.setStage(0);
+		}
+
 		if(parentElement.hasAttribute("incubatorId")) {
 			litter.setIncubatorId(parentElement.getAttribute("incubatorId"));
 		}
@@ -304,6 +317,33 @@ public class Litter implements XMLSaving {
 	
 	public void setBirthDate(LocalDateTime birthDate) {
 		this.birthDate = birthDate;
+	}
+
+	public int getStage() {
+		return stage;
+	}
+
+	public void setStage(int stage) {
+		this.stage = stage;
+	}
+
+	public void addOffspring(List<OffspringSeed> newOffspring) {
+		for(OffspringSeed os : newOffspring) {
+			this.offspring.add(os.getId());
+			if(os.isFeminine()) {
+				if(os.isTakesAfterMother()) {
+					daughtersMother++;
+				} else {
+					daughtersFather++;
+				}
+			} else {
+				if(os.isTakesAfterMother()) {
+					sonsMother++;
+				} else {
+					sonsFather++;
+				}
+			}
+		}
 	}
 	
 	public String getMotherId() {

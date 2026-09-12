@@ -133,10 +133,10 @@ public abstract class AbstractClothing extends AbstractCoreItem implements XMLSa
 			attributeMods.remove(rndMod);
 			TFModifier rndMod2 = attributeMods.get(Util.random.nextInt(attributeMods.size()));
 			
-			if(chance <= 30) { // Jinxed (30%):
+			if(chance <= 40) { // Jinxed (30%):
 				int randomEnchantmentSize = RandomEnchantment.getAllNegativeClothingEnchantments().size();
 				boolean enchantmentFound = false;
-				if(Math.random()<Math.min(randomEnchantmentSize * 0.05f, 0.75f)) { // Maximum of 75% chance to get a custom enchantment
+				if(Math.random()<Math.min(randomEnchantmentSize * 0.05f, 0.80f)) { // Maximum of 75% chance to get a custom enchantment
 					List<RandomEnchantment> clothingEnchantments = RandomEnchantment.getAllNegativeClothingEnchantments();
 
 					Map<RandomEnchantment, Integer> weightedMap = new HashMap<>();
@@ -185,10 +185,10 @@ public abstract class AbstractClothing extends AbstractCoreItem implements XMLSa
 				
 				enchantmentKnown = false;
 				
-			} else if(chance >= 90) { // Enchanted (10%)
+			} else if(chance >= 70) { // Enchanted (10%)
 				int randomEnchantmentSize = RandomEnchantment.getAllPositiveClothingEnchantments().size();
 				boolean enchantmentFound = false;
-				if(Math.random()<Math.min(randomEnchantmentSize * 0.1f, 0.75f)) { // Maximum of 75% chance to get a custom enchantment
+				if(Math.random()<Math.min(randomEnchantmentSize * 0.1f, 0.80f)) { // Maximum of 75% chance to get a custom enchantment
 					List<RandomEnchantment> clothingEnchantments = RandomEnchantment.getAllPositiveClothingEnchantments();
 
 					Map<RandomEnchantment, Integer> weightedMap = new HashMap<>();

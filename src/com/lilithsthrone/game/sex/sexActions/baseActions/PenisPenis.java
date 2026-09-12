@@ -628,7 +628,7 @@ public class PenisPenis {
 			SexParticipantType.NORMAL) {
 		private GameCharacter getCharacterToBeCreampied() {
 			if(Main.sex.getCharactersHavingOngoingActionWith(Main.sex.getCharacterPerformingAction(), SexAreaPenetration.PENIS).isEmpty()) {
-				new Exception().printStackTrace();
+				//new Exception().printStackTrace();
 				return null;
 			}
 			

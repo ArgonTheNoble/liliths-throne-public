@@ -35,6 +35,7 @@ import com.lilithsthrone.game.character.race.AbstractSubspecies;
 import com.lilithsthrone.game.character.race.FurryPreference;
 import com.lilithsthrone.game.character.race.Subspecies;
 import com.lilithsthrone.game.character.race.SubspeciesPreference;
+import com.lilithsthrone.game.character.race.TransformationPreference;
 import com.lilithsthrone.game.dialogue.DialogueNode;
 import com.lilithsthrone.game.dialogue.DialogueNodeType;
 import com.lilithsthrone.game.dialogue.responses.Response;
@@ -1866,6 +1867,14 @@ public class OptionsDialogue {
 				UtilText.nodeContentSB.append("<div id='ALL_SPAWN_"+sp+"' class='normal-button' style='width:80px; margin:0 2px;'>"+Util.capitaliseSentence(sp.getName())+"</div>");
 			}
 			UtilText.nodeContentSB.append("</div>"
+												+ "<div style='display:inline-block; margin:4px auto;'>"
+													+"<div style='float:left; text-align:right; margin-right:16px;'>"
+														+ "<b>Set all transformation frequencies:</b>"
+													+ "</div>");
+			for(TransformationPreference sp : TransformationPreference.values()) {
+				UtilText.nodeContentSB.append("<div id='ALL_TF_"+sp+"' class='normal-button' style='width:80px; margin:0 2px;'>"+Util.capitaliseSentence(sp.getName())+"</div>");
+			}
+			UtilText.nodeContentSB.append("</div>"
 											+"</div>");
 												
 			UtilText.nodeContentSB.append("<div class='container-full-width' style='text-align: center;'>"
@@ -1908,6 +1917,8 @@ public class OptionsDialogue {
 
 							Main.getProperties().setFeminineSubspeciesPreference(subspecies, subspecies.getSubspeciesPreferenceDefault());
 							Main.getProperties().setMasculineSubspeciesPreference(subspecies, subspecies.getSubspeciesPreferenceDefault());
+
+							Main.getProperties().setSubspeciesTransformationPreference(subspecies, TransformationPreference.ONE_LOW);
 						}
 						Main.getProperties().humanSpawnRate = 5;
 						Main.getProperties().taurSpawnRate = 5;
@@ -2016,6 +2027,21 @@ public class OptionsDialogue {
 					sb.append("<div id='MASCULINE_SPAWN_"+preference+"_"+subspeciesId+"' class='square-button small"+(!s.isSpawnPreferencesEnabled()?" disabled":"")
 								+(Main.getProperties().getSubspeciesMasculinePreferencesMap().get(s)==preference && s.isSpawnPreferencesEnabled()
 									?" selected' style='"+baseStyle+" border-color:"+PresetColour.MASCULINE_PLUS.toWebHexString()+";'><div class='square-button-content'>"+preference.getSVGImage(false)+"</div></div>"
+									:"' style='"+baseStyle+"'><div class='square-button-content'>"+preference.getSVGImage(true)+"</div></div>"));
+				}
+				
+			sb.append("</div>");
+
+			// TF:
+			sb.append("<div class='container-full-width' style='text-align:center; width:40%; background:transparent; margin:0; padding:0;'>"
+					+"<b style='color:"+PresetColour.TRANSFORMATION_GENERIC.toWebHexString()+"; float:left; width:100%; text-align:center;'>" +"Forced TF Chance"+"</b>"
+				+"</div>");
+		
+			sb.append("<div class='container-full-width' style='text-align:center; width:30%; background:transparent; margin:2px 0; padding:0;'>");
+				for(TransformationPreference preference : TransformationPreference.values()) {
+					sb.append("<div id='TRANSFORMATION_"+preference+"_"+subspeciesId+"' class='square-button small"+(!s.isSpawnPreferencesEnabled()?" disabled":"")
+								+(Main.getProperties().getSubspeciesTransformationPreferencesMap().get(s)==preference && s.isSpawnPreferencesEnabled()
+									?" selected' style='"+baseStyle+" border-color:"+PresetColour.TRANSFORMATION_GENERIC.toWebHexString()+";'><div class='square-button-content'>"+preference.getSVGImage(false)+"</div></div>"
 									:"' style='"+baseStyle+"'><div class='square-button-content'>"+preference.getSVGImage(true)+"</div></div>"));
 				}
 				
@@ -2739,6 +2765,16 @@ public class OptionsDialogue {
 				}
 			}
 			UtilText.nodeContentSB.append("</div></div>");
+
+			UtilText.nodeContentSB.append(getContentPreferenceVariableDiv(
+				"RANDOM_RACE_CHANCE",
+				PresetColour.TRANSFORMATION_GENERIC,
+				"Random Races",
+				"This sets the chance for forced TFs to pick a random race.",
+				Main.getProperties().randomRacePercentage+"%",
+				Main.getProperties().randomRacePercentage,
+				0,
+				100));
 			
 			UtilText.nodeContentSB.append(getContentPreferenceVariableDiv(
 					"FORCED_FETISH",

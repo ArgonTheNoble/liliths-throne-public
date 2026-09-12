@@ -6,6 +6,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.Month;
 import java.time.format.TextStyle;
@@ -414,6 +415,9 @@ public abstract class GameCharacter implements XMLSaving {
 	protected List<PregnancyPossibility> potentialPartnersAsMother;
 	protected List<PregnancyPossibility> potentialPartnersAsFather;
 	protected Litter pregnantLitter;
+	protected List<Litter> pregnantLitters;
+	protected Boolean readyForBirthing;
+	protected Boolean newPregOverride;
 	protected Map<SexAreaOrifice, Litter> incubatingLitters;
 	protected List<Litter> littersBirthed;
 	protected List<Litter> littersFathered;
@@ -697,6 +701,9 @@ public abstract class GameCharacter implements XMLSaving {
 		timeProgressedToFinalPregnancyStage = 1;
 		timeProgressedToFinalIncubationStage = new HashMap<>();
 		pregnantLitter = null;
+		pregnantLitters = new ArrayList<>();
+		readyForBirthing = false;
+		newPregOverride = false;
 		incubatingLitters = new HashMap<>();
 		implantedLitters = new ArrayList<>();
 		incubatedLitters = new ArrayList<>();
@@ -1255,6 +1262,14 @@ public abstract class GameCharacter implements XMLSaving {
 			Element characterPregnancyCurrentLitter = doc.createElement("pregnantLitter");
 			characterPregnancy.appendChild(characterPregnancyCurrentLitter);
 			this.getPregnantLitter().saveAsXML(characterPregnancyCurrentLitter, doc);
+		}
+
+		if(this.pregnantLitters.size() > 0) {
+			Element characterPregnancyAllLitters = doc.createElement("allLitters");
+			characterPregnancy.appendChild(characterPregnancyAllLitters);
+			for(Litter litter : this.pregnantLitters) {
+				litter.saveAsXML(characterPregnancyAllLitters, doc);
+			}
 		}
 		
 		if(!incubatingLitters.isEmpty()) {
@@ -2713,6 +2728,19 @@ public abstract class GameCharacter implements XMLSaving {
 						Main.game.getCharacterUtils().appendToImportLog(log, "<br/>Added Pregnant litter.");
 					}
 				}
+
+				nodes = pregnancyElement.getElementsByTagName("allLitters");
+				if(nodes.getLength()>0) {
+					element = (Element) nodes.item(0);
+					if(element!=null) {
+						NodeList litters = element.getElementsByTagName("litter");
+						for(int i=0; i<litters.getLength(); i++){
+							Element e = ((Element)litters.item(i));
+							character.addPregnantLitter(Litter.loadFromXML(e, doc));
+							Main.game.getCharacterUtils().appendToImportLog(log, "<br/>Added Pregnant litter (" + character.getPregnantLitters().size() + ").");
+						}
+					}
+				}
 				
 				nodes = pregnancyElement.getElementsByTagName("incubatingLitters");
 				if(nodes.getLength()>0) {
@@ -3811,9 +3839,27 @@ public abstract class GameCharacter implements XMLSaving {
 
 		infoScreenSB.append("</p>");
 
-		if(Main.game.getPlayer().hasTraitActivated(Perk.OBSERVANT) && !this.isPlayer()) {
-			String tfPref = ((NPC)this).getPreferredBodyDescription("b");
-			infoScreenSB.append("<p style='text-align:center;'><i>You suspect [npc.She] would be most interested in a " + tfPref + "</i></p>");
+		if(Main.game.getPlayer().hasTraitActivated(Perk.OBSERVANT)) {
+			if(!this.isPlayer()) {
+				String tfPref = ((NPC)this).getPreferredBodyDescription("b");
+				infoScreenSB.append("<p style='text-align:center;'><i>You suspect [npc.she] would be most interested in a " + tfPref + "</i></p>");
+			}
+			if(this.isPregnant()) {
+				//String pregDesc = pregnantLitter.getBirthedDescription();
+				infoScreenSB.append("<p style = 'text-align:center;'><i>With your keen observation, " 
+				+ (this.isPlayer() ? "you know that you are" : "you detect that [npc.she] is") 
+				+ " pregnant with:</i>"); //<br>" + pregDesc + "</p>");
+				if(pregnantLitters.size() == 0) {
+					String pregDesc = pregnantLitter.getBirthedDescription();
+					infoScreenSB.append("<br>" + pregDesc + "</p>");
+				} else {
+					for(Litter litter : pregnantLitters) {
+						String pregDesc = litter.getBirthedDescription();
+						infoScreenSB.append("<br>" + pregDesc);
+					}
+					infoScreenSB.append("</p>");
+				}
+			}
 		}
 		
 		infoScreenSB.append("<h6>Relationships</h6>"
@@ -4237,7 +4283,8 @@ public abstract class GameCharacter implements XMLSaving {
 	public void setBody(Body newBody, boolean additionalSetups, boolean keepVirginities) {
 		boolean[] v = body.getVirginityList();
 		body = newBody;
-		body.setVirginiesFromList(v);
+		if(keepVirginities)
+			body.setVirginiesFromList(v);
 
 		if(additionalSetups) {
 			additionalBodySetup(body.getGender(), RacialBody.valueOfRace(body.getRace()), body.getSubspecies());
@@ -4508,6 +4555,9 @@ public abstract class GameCharacter implements XMLSaving {
 			} else if (petName.equalsIgnoreCase("Mother") || petName.equalsIgnoreCase("Father")) {
 				return target.isFeminine()?"mother":"father";
 				
+			} else if (petName.equalsIgnoreCase("Daughter") || petName.equalsIgnoreCase("Son")) {
+				return target.isFeminine()?"daughter":"son";
+
 			} else if (petName.equalsIgnoreCase("Mistress") || petName.equalsIgnoreCase("Master")) {
 				return target.isFeminine()?"Mistress":"Master";
 				
@@ -4546,6 +4596,8 @@ public abstract class GameCharacter implements XMLSaving {
 				case GrandPibling:
 				case Pibling:
 					return target.isFeminine()?"auntie":"uncle";
+				default:
+					break;
 			}
 		}
 		
@@ -7658,6 +7710,9 @@ public abstract class GameCharacter implements XMLSaving {
 		float startHealth = this.getHealth();
 		float startMana = this.getMana();
 		
+		if(isPregnant() || hasStatusEffect(StatusEffect.PREGNANT_0))
+			calculatePregnancyStatus();
+
 		List<AbstractStatusEffect> tempListStatusEffects = new ArrayList<>();
 		
 		for(AppliedStatusEffect appliedSe : new ArrayList<>(statusEffects)) {
@@ -7893,6 +7948,22 @@ public abstract class GameCharacter implements XMLSaving {
 		updateAttributeListeners(se.getAttributeModifiers(this).keySet().stream().anyMatch(att->att.hasStatusEffect()));
 
 		return true;
+	}
+
+	public void applyStatusRemovalEffect(AbstractStatusEffect se) {
+		if(se.isCombatEffect()) {
+			System.err.println("Warning: forcing removal effect for combat status!");
+		}
+
+		String s = se.applyRemoveStatusEffect(this);
+
+		statusEffects.removeIf(ase -> ase.getEffect()==se);
+
+		s+=se.applyPostRemovalStatusEffect(this);
+
+		if(s.length()!=0) {
+			addStatusEffectDescription(se, s);
+		}
 	}
 
 	public int getStatusEffectDuration(AbstractStatusEffect se) {
@@ -19365,13 +19436,13 @@ public abstract class GameCharacter implements XMLSaving {
 			}
 			
 			if(fluidsStoredMap.containsKey(orificeIngestedThrough) && charactersFluid!=null) {
-				for(FluidStored fluidStored : fluidsStoredMap.get(orificeIngestedThrough)) {
-					if(fluidStored.equals(newFluid)) {
-						fluidStored.incrementMillilitres(millilitres);
-						found = true;
-						break;
-					}
-				}
+				// for(FluidStored fluidStored : fluidsStoredMap.get(orificeIngestedThrough)) {
+				// 	if(fluidStored.equals(newFluid)) {
+				// 		fluidStored.incrementMillilitres(millilitres);
+				// 		found = true;
+				// 		break;
+				// 	}
+				// }
 			}
 			if(!found) {
 				this.addFluidStored(
@@ -20510,7 +20581,11 @@ public abstract class GameCharacter implements XMLSaving {
 	public void initHealthAndManaToMax() {
 		// Have to call this twice, as the method removes status effects before adding new ones:
 		this.calculateStatusEffects(0); // First calculation adds subspecies bonus (after checking and failing to remove low arcane status effect)
-		this.calculateStatusEffects(0); // Second calculation removes low intelligence effect
+		if(!(IntelligenceLevel.getIntelligenceLevelFromValue(this.getAttributeValue(Attribute.MAJOR_ARCANE)) == IntelligenceLevel.ZERO_AIRHEAD && Main.game.isInNewWorld())) {
+			//this.removeStatusEffect(StatusEffect.)
+			this.calculateStatusEffects(0); // Second calculation removes low intelligence effect
+		}
+		
 		setMana(getAttributeValue(Attribute.MANA_MAXIMUM));
 		setHealth(getAttributeValue(Attribute.HEALTH_MAXIMUM));
 		
@@ -20943,7 +21018,7 @@ public abstract class GameCharacter implements XMLSaving {
 				List<FluidStored> fluids = new ArrayList<>(this.fluidsStoredMap.get(ot));
 				Collections.shuffle(fluids);
 				for(FluidStored fs : fluids) {
-					if(fs.isCum()) {
+					if(fs.isCum() && !fs.getCausedPregnancy()) {
 						GameCharacter partner = null;
 						if(fs.getCharactersFluidID().equals(Main.game.getPlayer().getId())) {
 							partner = Main.game.getPlayer();
@@ -20960,7 +21035,7 @@ public abstract class GameCharacter implements XMLSaving {
 //						} else {
 //							System.out.println(UtilText.parse(this, "2b: Rolling for [npc.name] impregnated by "+fs.getFluid().getName(null)));
 //						}
-						this.rollForPregnancy(partner, fs.getBody(), fs.getMillilitres(), fs.isCumVirile(), fs.getVirility(), directSexImpregnation, FertilisationType.NORMAL);
+						this.rollForPregnancy(partner, fs.getBody(), fs.getMillilitres(), fs.isCumVirile(), fs.getVirility(), directSexImpregnation, FertilisationType.NORMAL, fs);
 						
 //						if(partner!=null) {
 //							this.rollForPregnancy(partner, fs.getMillilitres(), directSexImpregnation);
@@ -21058,6 +21133,13 @@ public abstract class GameCharacter implements XMLSaving {
 	}
 
 	public String rollForPregnancy(GameCharacter partner, Body partnerBody, float cumQuantity, boolean isPartnerVirile, float partnerVirility, boolean directSexInsemination, FertilisationType fertilisationType) {
+			return rollForPregnancy(partner, partnerBody, cumQuantity, isPartnerVirile, partnerVirility, directSexInsemination, fertilisationType, null);
+	}
+
+	public String rollForPregnancy(GameCharacter partner, Body partnerBody, float cumQuantity, boolean isPartnerVirile, float partnerVirility, boolean directSexInsemination, FertilisationType fertilisationType, FluidStored fluid) {
+		if(fluid != null && fluid.getCausedPregnancy())
+			return "";
+
 		// Elemental handling:
 		if(this.isElemental()) {
 			return PregnancyDescriptor.NO_CHANCE.getDescriptor(this, partner, directSexInsemination)
@@ -21094,9 +21176,10 @@ public abstract class GameCharacter implements XMLSaving {
 //					+ "</p>";
 //		}
 		
-		if(this.isVisiblyPregnant()) {
+		if(this.isVisiblyPregnant() && !this.hasTraitActivated(Perk.FETISH_BROODMOTHER) && !this.hasFetish(Fetish.FETISH_PREGNANCY)) {
 			return PregnancyDescriptor.ALREADY_PREGNANT.getDescriptor(this, partner, directSexInsemination);
 		}
+		
 		if(this.getIncubationLitter(SexAreaOrifice.VAGINA)!=null) {
 			return PregnancyDescriptor.ALREADY_PREGNANT_EGGS.getDescriptor(this, partner, directSexInsemination);
 		}
@@ -21146,11 +21229,16 @@ public abstract class GameCharacter implements XMLSaving {
 		}
 		
 		String pregnancyDescription = PregnancyDescriptor.getPregnancyDescriptorBasedOnProbability(pregnancyChance).getDescriptor(this, partner, directSexInsemination);
-		
+
+		if(isNewlyPregnant(partner))
+			return pregnancyDescription;
 		// Now roll for pregnancy:
-		if (!this.isPregnant()) {
+		if (!this.isPregnant() || this.hasTraitActivated(Perk.FETISH_BROODMOTHER) || this.hasFetish(Fetish.FETISH_PREGNANCY)) {
 			if (!this.hasStatusEffect(StatusEffect.PREGNANT_0) && !this.isDoll()) {
-				this.addStatusEffect(StatusEffect.PREGNANT_0, (60 * 60) * (4 + Util.random.nextInt(5)));
+				this.addStatusEffect(StatusEffect.PREGNANT_0, 6 * (60 * 60) + 1);
+			}
+			if(this.isPlayer()) {
+				System.err.println("rolling player pregnancy...");
 			}
 			double rollResult = Math.random();
 			if(isSilentlyInfertile()) {
@@ -21174,20 +21262,27 @@ public abstract class GameCharacter implements XMLSaving {
 				int maximumNumberOfChildren = litterSizeBasedOn.getNumberOfOffspringHigh();
 				
 				if(this.hasTraitActivated(Perk.FETISH_BROODMOTHER)) {
-					maximumNumberOfChildren *= 2;
+					maximumNumberOfChildren += 1;
 				}
 				if(partner!=null && partner.hasTraitActivated(Perk.FETISH_SEEDER)) {
-					maximumNumberOfChildren *= 2;
+					maximumNumberOfChildren += 1;
 				}
-				
-				int numberOfChildren = minimumNumberOfChildren + Util.random.nextInt((maximumNumberOfChildren-minimumNumberOfChildren)+1);
 				
 				if(this.hasStatusEffect(StatusEffect.BROODMOTHER_PILL)) {
-					numberOfChildren *= 2;
+					maximumNumberOfChildren*= 2;
 				}
 				if(partner!=null && partner.hasStatusEffect(StatusEffect.BROODMOTHER_PILL)) {
-					numberOfChildren *= 2;
+					maximumNumberOfChildren *= 2;
 				}
+
+				int numberOfChildren = minimumNumberOfChildren + Util.random.nextInt((maximumNumberOfChildren-minimumNumberOfChildren)+1);
+				
+				// if(this.hasStatusEffect(StatusEffect.BROODMOTHER_PILL)) {
+				// 	numberOfChildren *= 2;
+				// }
+				// if(partner!=null && partner.hasStatusEffect(StatusEffect.BROODMOTHER_PILL)) {
+				// 	numberOfChildren *= 2;
+				// }
 				
 				List<OffspringSeed> offspring = new ArrayList<>(numberOfChildren);
 				for (int i = 0; i < numberOfChildren; i++) { // Add children here:
@@ -21200,19 +21295,70 @@ public abstract class GameCharacter implements XMLSaving {
 					}
 				}
 				
-				pregnantLitter = new Litter(Main.game.getDateNow(), Main.game.getDateNow(), this, partner, fertilisationType, offspring);
+				//pregnantLitter = new Litter(Main.game.getDateNow(), Main.game.getDateNow(), this, partner, fertilisationType, offspring);
+				// if(partner != null) {
+				// 	for(Litter litter : pregnantLitters) {
+				// 		if(litter.getStage() == 0 && partner == litter.getFather()) {
+				// 			litter.addOffspring(offspring);
+				// 			if(fluid != null) {
+				// 				fluid.setCausedPregnancy(true);
+				// 			}
+				// 			if(this.isPlayer()) {
+				// 				System.err.println("player impregnanted by same character!");
+				// 			}
+				// 			return pregnancyDescription;
+				// 		}
+				// 	}
+				// }
+				
+				Litter newLitter = new Litter(Main.game.getDateNow(), Main.game.getDateNow(), this, partner, fertilisationType, offspring);
+
 				if(partner==null) {
-					pregnantLitter.setFatherRace(partnerBody.getSubspecies());
+					//pregnantLitter.setFatherRace(partnerBody.getSubspecies());
+					newLitter.setFatherRace(partnerBody.getSubspecies());
 				}
+				pregnantLitters.add(newLitter);
+				sortPregnancies();
 				this.resetAllPregnancyReactions();
+				if(fluid != null) {
+					fluid.setCausedPregnancy(true);
+				}
+				if(this.isPlayer()) {
+					System.err.println("player impregnanted, now " + pregnantLitters.size() + " litters!");
+				}
 			}
 		}
 		
 		return pregnancyDescription;
 	}
 	
+	private void sortPregnancies() {
+		if(!pregnantLitters.isEmpty()) {
+			pregnantLitters.sort(Comparator.comparing(Litter::getConceptionDate));
+			pregnantLitter = pregnantLitters.get(0);
+		} else {
+			pregnantLitter = null;
+		}
+	}
+
 	public boolean isPregnant() {
-		return pregnantLitter != null;
+		return pregnantLitter != null || pregnantLitters.size() > 0;
+	}
+
+	public boolean isNewlyPregnant() {
+		return isNewlyPregnant(null);
+	}
+
+	public boolean isNewlyPregnant(GameCharacter partner) {
+		for(Litter litter : pregnantLitters) {
+			if(litter.getFather() == null || partner == null || partner == litter.getFather()) {
+				if(litter.getStage() == 0 || newPregOverride) {
+					//newPregOverride = false;
+					return true;
+				}
+			}
+		}
+		return false;
 	}
 	
 	public boolean isHasAnyPregnancyEffects() {
@@ -21229,6 +21375,17 @@ public abstract class GameCharacter implements XMLSaving {
 
 	public void setTimeProgressedToFinalPregnancyStage(long timeProgressedToFinalPregnancyStage) {
 		this.timeProgressedToFinalPregnancyStage = timeProgressedToFinalPregnancyStage;
+	}
+
+
+	public boolean isReadyForBirthing() {
+		// for(Litter l : pregnantLitters) {
+		// 	if(l.getStage() == 3) {
+		// 		return true;
+		// 	}
+		// }
+		// return false;
+		return readyForBirthing;
 	}
 
 	/**
@@ -21258,16 +21415,22 @@ public abstract class GameCharacter implements XMLSaving {
 			return;
 		}
 
-		pregnantLitter.setBirthDate(Main.game.getDateNow());
-		if(pregnantLitter.getFather()!=null) { // Set birth date for the father's litter copy:
-			for(Litter fatherCopy : pregnantLitter.getFather().getLittersFathered()) {
-				if(!fatherCopy.getId().isEmpty() && fatherCopy.getId().equals(pregnantLitter.getId())) {
+		Litter birthedLitter;
+		if(pregnantLitters.size() > 0)
+			birthedLitter = pregnantLitters.get(0);
+		else
+			birthedLitter = pregnantLitter;
+
+		birthedLitter.setBirthDate(Main.game.getDateNow());
+		if(birthedLitter.getFather()!=null) { // Set birth date for the father's litter copy:
+			for(Litter fatherCopy : birthedLitter.getFather().getLittersFathered()) {
+				if(!fatherCopy.getId().isEmpty() && fatherCopy.getId().equals(birthedLitter.getId())) {
 					fatherCopy.setBirthDate(Main.game.getDateNow());
 					break;
 				}
 			}
 		}
-		Litter birthedLitter = pregnantLitter;
+		//Litter birthedLitter = pregnantLitter;
 
 		if(withBirth) {
 			if(withClothingManagement) {
@@ -21338,7 +21501,7 @@ public abstract class GameCharacter implements XMLSaving {
 			}
 			
 		} else {
-			for(String os : pregnantLitter.getOffspring()) {
+			for(String os : birthedLitter.getOffspring()) {
 				if(os.contains("NPCOffspring")) {
 					Main.game.banishNPC(os);
 				} else {
@@ -21348,13 +21511,21 @@ public abstract class GameCharacter implements XMLSaving {
 		}
 		
 		// Clear pregnancy status effects and descriptions:
-		List<AbstractStatusEffect> pregnancyStatusEffects = Util.newArrayListOfValues(StatusEffect.PREGNANT_1, StatusEffect.PREGNANT_2, StatusEffect.PREGNANT_3);
-		for(AbstractStatusEffect se : pregnancyStatusEffects) {
-			removeStatusEffect(se);
-			this.removeStatusEffectDescription(se);
-		}
+		// List<AbstractStatusEffect> pregnancyStatusEffects = Util.newArrayListOfValues(StatusEffect.PREGNANT_1, StatusEffect.PREGNANT_2, StatusEffect.PREGNANT_3);
+		// for(AbstractStatusEffect se : pregnancyStatusEffects) {
+		// 	removeStatusEffect(se);
+		// 	this.removeStatusEffectDescription(se);
+		// }
 
-		pregnantLitter = null;
+		//pregnantLitter = null;
+		birthedLitter.setStage(-1);
+		pregnantLitters.remove(0);
+		if(pregnantLitters.isEmpty()) {
+			pregnantLitter = null;
+		} else {
+			pregnantLitter = pregnantLitters.get(0);
+		}
+		calculatePregnancyStatus();
 		
 		this.resetAllPregnancyReactions();
 		
@@ -21368,7 +21539,120 @@ public abstract class GameCharacter implements XMLSaving {
 			}
 		}
 	}
+
+	public void endAllPregnancies(boolean withBirth) {
+		while(pregnantLitters.size() > 0) {
+			endPregnancy(withBirth);
+		}
+	}
+
+	public void addStatusIfAbsent(AbstractStatusEffect e, int duration) {
+		if(!hasStatusEffect(e))
+			addStatusEffect(e, duration);
+	}
 	
+	public String calculatePregnancyStatus() {
+		StringBuilder sb = new StringBuilder();
+		final int stageLength = (int)((Main.getProperties().pregnancyDuration * 24) / 2f);
+		//long elapsedHours;
+		Duration elapsedTime;
+		int[] stageChanges = {0,0,0,0}; //stages ended: [s3, s2, s1, s0]
+		int newStage;
+		int latestStage = -1;
+		boolean changes = false;
+
+		if(!isPregnant() && hasStatusEffect(StatusEffect.PREGNANT_0)) {
+			removeStatusEffect(StatusEffect.PREGNANT_0);
+			endPregnancy(false);
+		}
+
+		for(Litter litter : pregnantLitters) {
+			//elapsedHours = ChronoUnit.HOURS.between(litter.getConceptionDate(), Main.game.getDateNow());
+			elapsedTime = Duration.between(litter.getConceptionDate(), Main.game.getDateNow());
+			if(elapsedTime.compareTo(Duration.ofHours(stageLength * 2)) >= 0) { //stage 3
+				newStage = 3;
+			}
+			else if(elapsedTime.compareTo(Duration.ofHours(stageLength)) >= 0) { //stage 2
+				newStage = 2;
+			}
+			else if(elapsedTime.compareTo(Duration.ofHours(6)) >= 0) { //stage 1
+				newStage = 1;
+			}
+			else { //stage 0
+				newStage = 0;
+			}
+			//if(this.isPlayer())
+			//	System.err.println("  calcing litter, elapsedTime: " + elapsedTime.toString() + ", current: " + litter.getStage() + ", newStage: " + newStage + ".");
+			if(newStage != litter.getStage()) {
+				changes = true;
+				for(int s=0; s < (newStage - litter.getStage()); s++) {
+					stageChanges[3 - litter.getStage() - s] += 1;
+				}
+				litter.setStage(newStage);
+			}
+			latestStage = Math.max(latestStage, newStage);
+		}
+		if(this.isPlayer() && changes) {
+			System.err.println("calcing player preg status: " + Arrays.toString(stageChanges) + ", latestStage: " + latestStage + ".");
+		}
+		if(stageChanges[3] > 0) {
+			newPregOverride = true;
+		} else {
+			newPregOverride = false;
+		}
+
+		if(latestStage == 3) {
+			//addStatusIfAbsent(StatusEffect.PREGNANT_3, 0);
+			readyForBirthing = true;
+		} else {
+			//removeStatusEffect(StatusEffect.PREGNANT_3);
+			readyForBirthing = false;
+		}
+		if(latestStage == 2) {
+			addStatusIfAbsent(StatusEffect.PREGNANT_2, stageLength * 60 * 60);
+			//addStatusIfAbsent(StatusEffect.PREGNANT_2, -1);
+		} else {
+			if(hasStatusEffect(StatusEffect.PREGNANT_2)) {
+				stageChanges[1] -= 1;
+				removeStatusEffect(StatusEffect.PREGNANT_2);
+			}
+		}
+		if(latestStage == 1) {
+			addStatusIfAbsent(StatusEffect.PREGNANT_1, stageLength * 60 * 60);
+			//addStatusIfAbsent(StatusEffect.PREGNANT_1, -1);
+		} else {
+			if(hasStatusEffect(StatusEffect.PREGNANT_1)) {
+				stageChanges[2] -= 1;
+				removeStatusEffect(StatusEffect.PREGNANT_1);
+			}
+		}
+		if(latestStage == 0) {
+			// addStatusIfAbsent(StatusEffect.PREGNANT_0, 6 * 60 * 60);
+			//addStatusIfAbsent(StatusEffect.PREGNANT_0, -1);
+		} else {
+			if(hasStatusEffect(StatusEffect.PREGNANT_0) && getStatusEffectDuration(StatusEffect.PREGNANT_0) <= 0) {
+				stageChanges[3] -= 1;
+				removeStatusEffect(StatusEffect.PREGNANT_0);
+			}
+		}
+		
+		if(this.isPlayer() && changes) {
+			System.err.println("	status after effects: " + Arrays.toString(stageChanges) + ", latestStage: " + latestStage + ".");
+		}
+
+		for(int i=0; i < stageChanges[3]; i++) {
+			applyStatusRemovalEffect(StatusEffect.PREGNANT_0);
+		}
+		for(int i=0; i < stageChanges[2]; i++) {
+			applyStatusRemovalEffect(StatusEffect.PREGNANT_1);
+		}
+		for(int i=0; i < stageChanges[1]; i++) {
+			applyStatusRemovalEffect(StatusEffect.PREGNANT_2);
+		}
+		
+		return sb.toString();
+	}
+
 	/**
 	 * Ends the character's incubation pregnancy in the associated orifice, unsealing orifice-blocking clothing in the process.
 	 * 
@@ -21660,6 +21944,16 @@ public abstract class GameCharacter implements XMLSaving {
 	
 	public void setPregnantLitter(Litter pregnantLitter) {
 		this.pregnantLitter = pregnantLitter;
+	}
+
+	public void addPregnantLitter(Litter litter) {
+		this.pregnantLitters.add(litter);
+		if(this.pregnantLitter == null)
+			this.pregnantLitter = litter;
+	}
+
+	public List<Litter> getPregnantLitters() {
+		return this.pregnantLitters;
 	}
 
 	public int getLittersGenerated() {
@@ -25744,7 +26038,8 @@ public abstract class GameCharacter implements XMLSaving {
 				&& getGenitalArrangement()==GenitalArrangement.NORMAL
 				&& (hasPenisModifier(PenetrationModifier.SHEATHED)
 					? getPenisRawSizeValue()>=PenisLength.FOUR_HUGE.getMaximumValue()
-					: getPenisRawSizeValue()>=PenisLength.TWO_AVERAGE.getMaximumValue());
+					: getPenisRawSizeValue()>=PenisLength.TWO_AVERAGE.getMaximumValue())
+				&& !isErectionPreventedPhysically();
 	}
 	
 	public boolean isTesticleBulgeVisible() {
@@ -28525,7 +28820,8 @@ public abstract class GameCharacter implements XMLSaving {
 		}
 		
 		// Slimes can get pregnant from cum being stored anywhere:
-		if(type==BodyMaterial.SLIME && !this.isPregnant()) {
+		if(type==BodyMaterial.SLIME && 
+			(!this.isPregnant() || this.hasTraitActivated(Perk.FETISH_BROODMOTHER) || this.hasFetish(Fetish.FETISH_PREGNANCY))) {
 			performImpregnationCheck(false);
 		}
 		

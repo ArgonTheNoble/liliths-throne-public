@@ -262,6 +262,7 @@ public class Util {
 			File[] innerDirectoryListing = directory.listFiles((path, filename) -> filename.toLowerCase().endsWith(".xml"));
 			
 			if(innerDirectoryListing != null) {
+				Arrays.sort(innerDirectoryListing);
 				for(File innerChild : innerDirectoryListing) {
 					if(filterPathName==null || filterPathName.equalsIgnoreCase(innerChild.getName().split("\\.")[0])) {
 						try {

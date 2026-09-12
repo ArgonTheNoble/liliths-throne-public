@@ -3018,8 +3018,11 @@ public class Game implements XMLSaving {
 							}
 							npc.alignLustToRestingLust(secondsPassedThisTurn);
 						}
+						// if(npc.isPregnant())
+						// 	npc.calculatePregnancyStatus();
 					}
 				}
+				
 				if(!slavesUpdated || !npc.isSlave() || !npc.getOwner().isPlayer()) { // Player-owned slaves already had their status effects updated in the slavery events update loop
 					npc.calculateStatusEffects(secondsPassedThisTurn);
 				}
@@ -3091,7 +3094,7 @@ public class Game implements XMLSaving {
 					}
 				}
 			}
-			
+
 			// Giving birth:
 			if(npc.hasStatusEffect(StatusEffect.PREGNANT_3)
 					&& !Main.game.getCharactersPresent().contains(npc)
@@ -3360,6 +3363,10 @@ public class Game implements XMLSaving {
 				Main.game.getPlayer().alignLustToRestingLust(secondsPassedThisTurn);
 			}
 			if(Main.game.getCurrentDialogueNode()!=MiscDialogue.STATUS_EFFECTS) { // Handle status effects:
+				// if(!isInCombat() && !isInSex()) {
+				// 	if(Main.game.getPlayer().isPregnant())
+				// 		Main.game.getPlayer().calculatePregnancyStatus();
+				// }
 				Main.game.getPlayer().calculateStatusEffects(secondsPassedThisTurn);
 			}
 		}
@@ -5587,7 +5594,8 @@ public class Game implements XMLSaving {
 	private void removeNPC(NPC npc) {
 		if(npc.isPregnant()) {
 			// End with birth if father is player
-			npc.endPregnancy(npc.getPregnantLitter().getFather()!=null && npc.getPregnantLitter().getFather().isPlayer());
+			//npc.endPregnancy(npc.getPregnantLitter().getFather()!=null && npc.getPregnantLitter().getFather().isPlayer());
+			npc.endAllPregnancies(npc.getPregnantLitter().getFather()!=null && npc.getPregnantLitter().getFather().isPlayer());
 			
 		} else if(npc.hasStatusEffect(StatusEffect.PREGNANT_0)) {
 			npc.removeStatusEffect(StatusEffect.PREGNANT_0);
@@ -6202,8 +6210,16 @@ public class Game implements XMLSaving {
 		if(Main.game.isStarted() 
 			&& !Main.game.getCurrentDialogueNode().equals(OptionsDialogue.GAMEPLAY)
 			&& player != null 
+			&& player.getFetishDesire(Fetish.FETISH_TRANSFORMATION_RECEIVING) != FetishDesire.ZERO_HATE
 			&& getNonCompanionCharactersPresent().size() > 0) {
-				if(player.getAttributeValue(Attribute.MAJOR_PHYSIQUE) < getNonCompanionCharactersPresent().get(0).getAttributeValue(Attribute.MAJOR_PHYSIQUE)) {
+				float maxPhysique = 0;
+				for(NPC npc : getNonCompanionCharactersPresent()) {
+					if(npc.getAttributeValue(Attribute.MAJOR_PHYSIQUE) > maxPhysique) {
+						maxPhysique = npc.getAttributeValue(Attribute.MAJOR_PHYSIQUE);
+					}
+				}
+				float physiqueDiff = maxPhysique - player.getAttributeValue(Attribute.MAJOR_PHYSIQUE);
+				if(Util.random.nextInt(100) < physiqueDiff * 2) {
 					return true;
 				}
 		}

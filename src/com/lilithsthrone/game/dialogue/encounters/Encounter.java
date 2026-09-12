@@ -394,7 +394,7 @@ public class Encounter {
 		public Map<EncounterType, Float> getDialogues() {
 			Map<EncounterType, Float> map = Util.newHashMapOfValues(
 					new Value<EncounterType, Float>(EncounterType.DOMINION_FIND_ITEM, 3f),
-					new Value<EncounterType, Float>(EncounterType.DOMINION_FIND_CLOTHING, 2f),
+					new Value<EncounterType, Float>(EncounterType.DOMINION_FIND_CLOTHING, 4f),
 					new Value<EncounterType, Float>(EncounterType.DOMINION_FIND_WEAPON, 1f),
 					(Main.game.getCurrentWeather()!=Weather.MAGIC_STORM && getSlaveWantingToUseYouInDominion()!=null
 						?new Value<EncounterType, Float>(EncounterType.SLAVE_USES_YOU, 5f)

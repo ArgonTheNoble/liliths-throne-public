@@ -733,6 +733,19 @@ public abstract class AbstractItemEffectType {
 					case TF_MOD_ORIFICE_TENTACLED:
 						descriptions.add(getClothingOrificeTFChangeDescriptionEntry(potency, "nipples internally tentacled (crotch)", "nipple tentacles"));
 						break;
+					case NONE:
+						String raceName = "";
+						if(target != null)
+							raceName = target.getRace().getName(false) + " ";
+						String time = "???";
+						if(potency == TFPotency.MINOR_BOOST)
+							time = "a week";
+						else if(potency == TFPotency.BOOST)
+							time = "a day";
+						else if(potency == TFPotency.MAJOR_BOOST)
+							time = "an hour";
+						descriptions.add("In " + time + ", grows " + raceName + "crotch-boobs.");
+						break;
 					default:
 						break;
 				}
@@ -1468,6 +1481,14 @@ public abstract class AbstractItemEffectType {
 								break;
 							default:
 								break;
+						}
+					} else {
+						if(secondaryModifier == TFModifier.NONE) {
+							if(target.getBreastCrotchType() == BreastType.NONE) {
+								if(!BreastType.getBreastTypes(target.getRace()).isEmpty()) {
+									sb.append(target.setBreastCrotchType(BreastType.getBreastTypes(target.getRace()).get(0)));
+								}
+							}
 						}
 					}
 					break;

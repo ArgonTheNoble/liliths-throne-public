@@ -515,6 +515,7 @@ public class Sex {
 		for(GameCharacter character : Main.sex.getAllParticipants()) {
 			if(!character.isPlayer() && (Main.sex.getSexControl(character)!=SexControl.FULL || !Main.sex.isDom(character))) {
 				charactersForbiddenByOthersFromPositioning.add(character);
+				charactersSelfActionsBlocked.add(character);
 			}
 		}
 		
@@ -772,7 +773,7 @@ public class Sex {
 		charactersBannedFromRemovingOthersClothing = new HashSet<>();
 		for(GameCharacter character : Main.sex.getAllParticipants()) {
 			if(Main.sex.getSexControl(character).getValue()<SexControl.ONGOING_PLUS_LIMITED_PENETRATIONS.getValue()) {
-				charactersBannedFromRemovingOthersClothing.add(character);
+				//charactersBannedFromRemovingOthersClothing.add(character);
 			}
 		}
 

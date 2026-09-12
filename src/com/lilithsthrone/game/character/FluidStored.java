@@ -39,6 +39,8 @@ public class FluidStored implements XMLSaving {
 	private FluidMilk milk;
 	private FluidGirlCum girlCum;
 	private float millilitres;
+
+	private boolean hasCausedPregnancy;
 	
 	public FluidStored(GameCharacter character, FluidCum cum, float millilitres) {
 		if(character!=null) {
@@ -68,6 +70,8 @@ public class FluidStored implements XMLSaving {
 		}
 		
 		this.millilitres = millilitres;
+
+		this.hasCausedPregnancy = false;
 	}
 	
 	public FluidStored(String charactersFluidID, Body body, FluidCum cum, float millilitres) {
@@ -197,6 +201,7 @@ public class FluidStored implements XMLSaving {
 		XMLUtil.addAttribute(doc, fluidStoredElement, "cumVirile", String.valueOf(cumVirile));
 		XMLUtil.addAttribute(doc, fluidStoredElement, "virility", String.valueOf(virility));
 		XMLUtil.addAttribute(doc, fluidStoredElement, "millilitres", String.valueOf(millilitres));
+		XMLUtil.addAttribute(doc, fluidStoredElement, "hasCausedPregnancy", String.valueOf(hasCausedPregnancy));
 		
 		if(isCum()) {
 //			XMLUtil.addAttribute(doc, fluidStoredElement, "cumSubspecies", Subspecies.getIdFromSubspecies(cumSubspecies));
@@ -227,9 +232,11 @@ public class FluidStored implements XMLSaving {
 		boolean feral = false;
 		boolean cumVirile = true;
 		float virility = 25;
+		boolean hasCausedPregnancy = false;
 		try {
 			feral = Boolean.parseBoolean(parentElement.getAttribute("bestial"));
 			virility = Float.parseFloat(parentElement.getAttribute("virility"));
+			hasCausedPregnancy = Boolean.parseBoolean(parentElement.getAttribute("hasCausedPregnancy"));
 		} catch(Exception ex) {
 		}
 		if(!parentElement.getAttribute("cumVirile").isEmpty()) {
@@ -245,6 +252,7 @@ public class FluidStored implements XMLSaving {
 				fluid.feral=feral;
 				fluid.cumVirile = cumVirile;
 				fluid.virility=virility;
+				fluid.hasCausedPregnancy = hasCausedPregnancy;
 				return fluid;
 			}
 			
@@ -255,6 +263,7 @@ public class FluidStored implements XMLSaving {
 				fluid.feral=feral;
 				fluid.cumVirile = false;
 				fluid.virility=0;
+				fluid.hasCausedPregnancy = false;
 				return fluid;
 				
 			} else if(parentElement.getElementsByTagName("fluidMilk").item(0)!=null) {
@@ -262,6 +271,7 @@ public class FluidStored implements XMLSaving {
 				fluid.feral=feral;
 				fluid.cumVirile = false;
 				fluid.virility=0;
+				fluid.hasCausedPregnancy = false;
 				return fluid;
 			}
 
@@ -271,6 +281,7 @@ public class FluidStored implements XMLSaving {
 				fluid.feral=feral;
 				fluid.cumVirile = false;
 				fluid.virility=0;
+				fluid.hasCausedPregnancy = false;
 				return fluid;
 				
 			} else if(parentElement.getElementsByTagName("fluidGirlCum").item(0)!=null) {
@@ -278,6 +289,7 @@ public class FluidStored implements XMLSaving {
 				fluid.feral=feral;
 				fluid.cumVirile = false;
 				fluid.virility=0;
+				fluid.hasCausedPregnancy = false;
 				return fluid;
 			}
 			
@@ -300,6 +312,7 @@ public class FluidStored implements XMLSaving {
 				fluid.feral=feral;
 				fluid.cumVirile = cumVirile;
 				fluid.virility=virility;
+				fluid.hasCausedPregnancy = hasCausedPregnancy;
 				return fluid;
 			}
 		}
@@ -380,6 +393,14 @@ public class FluidStored implements XMLSaving {
 	
 	public void incrementMillilitres(float increment) {
 		setMillilitres(this.millilitres + increment);
+	}
+
+	public boolean getCausedPregnancy() {
+		return hasCausedPregnancy;
+	}
+
+	public void setCausedPregnancy(boolean val) {
+		this.hasCausedPregnancy = val;
 	}
 	
 }

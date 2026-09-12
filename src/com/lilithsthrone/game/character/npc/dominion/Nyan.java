@@ -625,7 +625,7 @@ public class Nyan extends NPC {
 						&& (!clothing.getDefaultItemTags().contains(ItemTag.SILLY_MODE) || Main.game.isSillyMode())) {
 					AbstractClothing generatedClothing = Main.game.getItemGen().generateClothing(clothing, false);
 
-					for(int i=0; i<2+Util.random.nextInt(5); i++) {
+					for(int i=0; i<5+Util.random.nextInt(10); i++) {
 						if(clothing.getRarity() == Rarity.COMMON) {
 							if(clothing.getFemininityRestriction()==Femininity.FEMININE) {
 								if(ClothingType.getCoreClothingSlots().contains(clothing.getEquipSlots().get(0))) {

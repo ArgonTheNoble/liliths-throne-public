@@ -56,6 +56,7 @@ import com.lilithsthrone.game.dialogue.utils.InventoryInteraction;
 import com.lilithsthrone.game.dialogue.utils.OptionsDialogue;
 import com.lilithsthrone.game.dialogue.utils.UtilText;
 import com.lilithsthrone.game.inventory.InventorySlot;
+import com.lilithsthrone.game.inventory.ItemTag;
 import com.lilithsthrone.game.inventory.clothing.AbstractClothing;
 import com.lilithsthrone.game.inventory.clothing.AbstractClothingType;
 import com.lilithsthrone.game.inventory.clothing.ClothingType;
@@ -1908,6 +1909,10 @@ public class CharacterCreation {
 					public void effects() {
 						Main.game.getTextEndStringBuilder().append(Main.game.getPlayer().startQuest(QuestLine.MAIN));
 						
+						if(Main.game.getPlayer().hasClothingWithTag(ItemTag.PRESCRIPTION_GLASSES, true, false)) {
+							Main.game.getPlayer().addPerk(Perk.SPECIAL_SHORT_SIGHTED);
+						}
+
 						applyGameStart();
 					}
 				};
@@ -1969,6 +1974,10 @@ public class CharacterCreation {
 						AbstractItem spellBook = Main.game.getItemGen().generateItem(ItemType.getSpellBookType(startingSpell));
 						Main.game.getWorlds().get(WorldType.LILAYAS_HOUSE_FIRST_FLOOR).getCell(PlaceType.LILAYA_HOME_ROOM_PLAYER).getInventory().addItem(spellBook);
 						
+						if(Main.game.getPlayer().hasClothingWithTag(ItemTag.PRESCRIPTION_GLASSES, true, false)) {
+							Main.game.getPlayer().addPerk(Perk.SPECIAL_SHORT_SIGHTED);
+						}
+
 						applyGameStart();
 						applySkipPrologueStart(false);
 						Main.game.getPlayer().setLocation(WorldType.LILAYAS_HOUSE_FIRST_FLOOR, PlaceType.LILAYA_HOME_ROOM_PLAYER);
@@ -2195,6 +2204,9 @@ public class CharacterCreation {
 		player.setLevel(1);
 		player.resetSpells();
 		player.resetPerksMap(false);
+		if(player.hasClothingWithTag(ItemTag.PRESCRIPTION_GLASSES, true, false)) {
+			player.addPerk(Perk.SPECIAL_SHORT_SIGHTED);
+		}
 	}
 
 	public static final DialogueNode INTRO_2_FROM_IMPORT = new DialogueNode("In the Museum", "", true) {
